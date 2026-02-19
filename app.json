@@ -5,7 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "experiments": {
-      "baseUrl": "/massage-frontend"
+      "baseUrl": "/massage-frontend/",
+      "tsconfigPaths": true
     },
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -28,7 +29,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "useLocalMetro": true,
+      "metro": {
+        "config": "./metro.config.js"
+      }
     }
   }
 }

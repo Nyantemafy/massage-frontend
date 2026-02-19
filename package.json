@@ -8,10 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build": "npx expo export -p web",
-    "predeploy": "npm run build && type nul > dist/.nojekyll",
-    "deploy": "gh-pages -d dist -t true"
-  },  
+    "build": "npx expo export -p web && node web-build-hooks.js",
+    "predeploy": "npm run build && echo. > dist/.nojekyll",
+    "deploy": "gh-pages -d dist -t"
+  },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.0",
     "@expo/vector-icons": "^14.0.0",
