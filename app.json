@@ -1,9 +1,12 @@
 {
   "expo": {
     "name": "Salama Massage",
-    "slug": "salama-massage",
+    "slug": "massage-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
+    "experiments": {
+      "baseUrl": "/massage-frontend"
+    },
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
