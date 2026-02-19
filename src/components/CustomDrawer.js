@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -14,11 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { Image } from 'react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.8;
 
 const CustomDrawer = ({ visible, onClose, navigation }) => {
     const { user, logout } = useAuth();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const slideAnim = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
 
     React.useEffect(() => {
@@ -41,7 +42,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
         { title: 'Tableau de bord', icon: 'grid-outline', screen: 'Dashboard' },
         { title: 'Emploi du temps', icon: 'calendar-outline', screen: 'Schedule' },
         { title: 'Paiement', icon: 'card-outline', screen: 'Payment' },
-        { title: 'Conge', icon: 'calendar-clear-outline', screen: 'Leave' },
+        { title: 'Congé', icon: 'calendar-clear-outline', screen: 'Leave' },
         { title: 'Clients', icon: 'people-outline', screen: 'Clients' },
         { title: 'Profil', icon: 'person-outline', screen: 'Profile' },
     ];
@@ -52,81 +53,146 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
     };
 
     const handleLogout = async () => {
+        setShowLogoutModal(false);
         onClose();
         await logout();
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+        });
     };
 
     return (
-        <Modal
-            visible={visible}
-            transparent
-            animationType="none"
-            onRequestClose={onClose}
-        >
-            <TouchableWithoutFeedback onPress={onClose}>
+        <>
+            <Modal
+                visible={visible}
+                transparent
+                animationType="none"
+                onRequestClose={onClose}
+            >
+                {/* Supprimer TouchableWithoutFeedback ici pour permettre le défilement */}
                 <View style={styles.modalOverlay}>
-                    <TouchableWithoutFeedback>
-                        <Animated.View 
-                            style={[
-                                styles.drawerContainer,
-                                { transform: [{ translateX: slideAnim }] }
-                            ]}
+                    {/* TouchableWithoutFeedback seulement pour l'overlay */}
+                    <TouchableWithoutFeedback onPress={onClose}>
+                        <View style={StyleSheet.absoluteFillObject} />
+                    </TouchableWithoutFeedback>
+                    
+                    {/* Drawer animé - PAS de TouchableWithoutFeedback autour */}
+                    <Animated.View 
+                        style={[
+                            styles.drawerContainer,
+                            { transform: [{ translateX: slideAnim }] }
+                        ]}
+                    >
+                        {/* Header avec bouton fermeture */}
+                        <View style={styles.drawerHeader}>
+                            <TouchableOpacity 
+                                onPress={onClose}
+                                style={styles.closeButton}
+                            >
+                                <Image 
+                                    source={require('../../assets/icone/rec.png')}
+                                    style={styles.closeIcon}
+                                    resizeMode="contain"
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* ScrollView pour le contenu défilable */}
+                        <ScrollView 
+                            showsVerticalScrollIndicator={false}
+                            style={styles.scrollView}
+                            contentContainerStyle={styles.scrollContent}
+                            bounces={true}
+                            scrollEnabled={true}
                         >
-                            {/* En-tête du drawer avec icône de fermeture */}
-                            <View style={styles.drawerHeader}>
-                                <TouchableOpacity 
-                                    onPress={onClose}
-                                    style={styles.closeButton}
-                                >
-                                    <Image 
-                                        source={require('../../assets/icone/rec.png')}
-                                        style={styles.closeIcon}
-                                        resizeMode="contain"
-                                    />
-                                </TouchableOpacity>
+                            {/* Profile Section */}
+                            <View style={styles.profileSection}>
+                                <View style={styles.profileImageContainer}>
+                                    <View style={styles.profileImage}>
+                                        <Ionicons name="person" size={48} color="#F8A5C2" />
+                                    </View>
+                                </View>
+                                <Text style={styles.userName}>
+                                    {user?.first_name || 'Nom'} {user?.last_name || 'et prénom'}
+                                </Text>
+                                <Text style={styles.userRole}>
+                                    {user?.role_name || 'role'}
+                                </Text>
                             </View>
 
-                            <ScrollView showsVerticalScrollIndicator={false}>
-                                <View style={styles.profileSection}>
-                                    <View style={styles.profileImageContainer}>
-                                        <View style={styles.profileImage}>
-                                            <Ionicons name="person" size={48} color="#999" />
-                                        </View>
-                                    </View>
-                                    <Text style={styles.userName}>
-                                        {user?.first_name} {user?.last_name}
-                                    </Text>
-                                    <Text style={styles.userRole}>
-                                        {user?.role_name || 'Masseuse'}
-                                    </Text>
-                                </View>
+                            {/* Menu Items */}
+                            <View style={styles.menuList}>
+                                {menuItems.map((item, index) => (
+                                    <TouchableOpacity
+                                        key={index}
+                                        style={styles.menuItem}
+                                        onPress={() => handleNavigation(item.screen)}
+                                    >
+                                        <Ionicons name={item.icon} size={24} color="#666" />
+                                        <Text style={styles.menuItemText}>{item.title}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
 
-                                <View style={styles.menuList}>
-                                    {menuItems.map((item, index) => (
-                                        <TouchableOpacity
-                                            key={index}
-                                            style={styles.menuItem}
-                                            onPress={() => handleNavigation(item.screen)}
-                                        >
-                                            <Ionicons name={item.icon} size={24} color="#666" />
-                                            <Text style={styles.menuItemText}>{item.title}</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-
+                            {/* Logout Button */}
+                            <View style={styles.logoutContainer}>
                                 <TouchableOpacity 
                                     style={styles.logoutButton}
-                                    onPress={handleLogout}
+                                    onPress={() => setShowLogoutModal(true)}
                                 >
                                     <Ionicons name="log-out-outline" size={24} color="#DC143C" />
                                     <Text style={styles.logoutButtonText}>Se déconnecter</Text>
                                 </TouchableOpacity>
-                            </ScrollView>
-                        </Animated.View>
-                    </TouchableWithoutFeedback>
+                            </View>
+
+                            {/* Version de l'application */}
+                            <Text style={styles.versionText}>Version 1.0.0</Text>
+                        </ScrollView>
+                    </Animated.View>
                 </View>
-            </TouchableWithoutFeedback>
-        </Modal>
+            </Modal>
+
+            {/* Modal de confirmation de déconnexion (inchangée) */}
+            <Modal
+                visible={showLogoutModal}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowLogoutModal(false)}
+            >
+                <TouchableWithoutFeedback onPress={() => setShowLogoutModal(false)}>
+                    <View style={styles.modalOverlay}>
+                        <TouchableWithoutFeedback>
+                            <View style={styles.confirmModalContainer}>
+                                <View style={styles.confirmModalContent}>
+                                    <View style={styles.confirmIconContainer}>
+                                        <Ionicons name="log-out-outline" size={50} color="#DC143C" />
+                                    </View>
+                                    <Text style={styles.confirmTitle}>Déconnexion</Text>
+                                    <Text style={styles.confirmMessage}>
+                                        Êtes-vous sûr de vouloir vous déconnecter ?
+                                    </Text>
+                                    <View style={styles.confirmButtons}>
+                                        <TouchableOpacity
+                                            style={[styles.confirmButton, styles.cancelButton]}
+                                            onPress={() => setShowLogoutModal(false)}
+                                        >
+                                            <Text style={styles.cancelButtonText}>Annuler</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={[styles.confirmButton, styles.confirmLogoutButton]}
+                                            onPress={handleLogout}
+                                        >
+                                            <Text style={styles.confirmLogoutButtonText}>Se déconnecter</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+        </>
     );
 };
 
@@ -134,13 +200,11 @@ const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        flexDirection: 'row',
     },
     drawerContainer: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
         width: DRAWER_WIDTH,
+        height: '100%',
         backgroundColor: '#FFF',
         elevation: 5,
         shadowColor: '#000',
@@ -149,10 +213,12 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
     },
     drawerHeader: {
-        position: 'absolute',
-        top: 40,
-        left: 15,
-        zIndex: 10,
+        paddingTop: 40,
+        paddingLeft: 15,
+        paddingBottom: 10,
+        backgroundColor: '#FFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
     },
     closeButton: {
         width: 40,
@@ -172,12 +238,18 @@ const styles = StyleSheet.create({
         height: 24,
         tintColor: '#333',
     },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+    },
     profileSection: {
         backgroundColor: '#FFE5EF',
         alignItems: 'center',
-        paddingTop: 60, // Augmenté pour faire de la place à l'icône de fermeture
-        paddingBottom: 30,
+        paddingVertical: 30,
         paddingHorizontal: 20,
+        marginBottom: 10,
     },
     profileImageContainer: {
         marginBottom: 15,
@@ -193,25 +265,28 @@ const styles = StyleSheet.create({
         borderColor: '#F8A5C2',
     },
     userName: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '600',
         color: '#333',
         marginBottom: 5,
+        textAlign: 'center',
     },
     userRole: {
         fontSize: 14,
         color: '#666',
+        textAlign: 'center',
+        textTransform: 'lowercase',
     },
     menuList: {
-        padding: 20,
+        paddingVertical: 10,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
-        marginBottom: 8,
-        borderRadius: 8,
-        backgroundColor: '#F8F9FA',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
     },
     menuItemText: {
         fontSize: 16,
@@ -219,22 +294,97 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginLeft: 15,
     },
+    logoutContainer: {
+        marginTop: 20,
+        paddingTop: 10,
+    },
     logoutButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        margin: 20,
-        marginTop: 30,
-        padding: 15,
-        borderRadius: 8,
-        borderWidth: 2,
-        borderColor: '#DC143C',
-        backgroundColor: '#FFF',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
     },
     logoutButtonText: {
         fontSize: 16,
         color: '#DC143C',
         fontWeight: '600',
         marginLeft: 15,
+    },
+    versionText: {
+        fontSize: 12,
+        color: '#999',
+        textAlign: 'center',
+        marginTop: 20,
+        marginBottom: 30,
+    },
+    // Styles pour la modal de confirmation
+    confirmModalContainer: {
+        width: width * 0.85,
+        maxWidth: 400,
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        overflow: 'hidden',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    confirmModalContent: {
+        padding: 25,
+        alignItems: 'center',
+    },
+    confirmIconContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: '#FFE5EF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    confirmTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#333',
+        marginBottom: 10,
+    },
+    confirmMessage: {
+        fontSize: 16,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 25,
+        lineHeight: 22,
+    },
+    confirmButtons: {
+        flexDirection: 'row',
+        gap: 12,
+        width: '100%',
+    },
+    confirmButton: {
+        flex: 1,
+        paddingVertical: 15,
+        borderRadius: 25,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    cancelButton: {
+        backgroundColor: '#F5F5F5',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        color: '#666',
+        fontWeight: '600',
+    },
+    confirmLogoutButton: {
+        backgroundColor: '#DC143C',
+    },
+    confirmLogoutButtonText: {
+        fontSize: 16,
+        color: '#FFF',
+        fontWeight: '600',
     },
 });
 
