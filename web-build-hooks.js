@@ -6,41 +6,44 @@ module.exports = {
   postExport: async (args) => {
     const { projectRoot, exportPath } = args;
     
-    // Copy vector icons fonts to the correct location
-    const fontsSource = path.join(projectRoot, 'node_modules', '@expo', 'vector-icons');
-    const fontsDest = path.join(exportPath, 'assets', 'fonts');
+    // Create the exact directory structure that the app expects
+    const fontsDir = path.join(exportPath, 'assets', 'node_modules', '@expo', 'vector-icons', 'build', 'vendor', 'react-native-vector-icons', 'Fonts');
+    const calendarDir = path.join(exportPath, 'assets', 'node_modules', 'react-native-calendars', 'src', 'calendar', 'img');
     
-    if (!fs.existsSync(fontsDest)) {
-      fs.mkdirSync(fontsDest, { recursive: true });
+    if (!fs.existsSync(fontsDir)) {
+      fs.mkdirSync(fontsDir, { recursive: true });
     }
     
-    // Copy Ionicons font
-    const ioniconsSource = path.join(fontsSource, 'Ionicons.ttf');
-    const ioniconsDest = path.join(fontsDest, 'Ionicons.ttf');
-    
-    if (fs.existsSync(ioniconsSource)) {
-      fs.copyFileSync(ioniconsSource, ioniconsDest);
-      console.log('Copied Ionicons font to web build');
+    if (!fs.existsSync(calendarDir)) {
+      fs.mkdirSync(calendarDir, { recursive: true });
     }
     
-    // Copy calendar images
-    const calendarSource = path.join(projectRoot, 'node_modules', 'react-native-calendars', 'src', 'calendar', 'img');
-    const calendarDest = path.join(exportPath, 'assets', 'calendar');
+    // Copy ALL vector icon fonts to the exact path expected by the app
+    const sourceFontsDir = path.join(projectRoot, 'node_modules', '@expo', 'vector-icons', 'build', 'vendor', 'react-native-vector-icons', 'Fonts');
     
-    if (fs.existsSync(calendarSource)) {
-      if (!fs.existsSync(calendarDest)) {
-        fs.mkdirSync(calendarDest, { recursive: true });
-      }
-      
-      const images = ['previous.png', 'next.png'];
-      images.forEach(img => {
-        const imgSource = path.join(calendarSource, img);
-        const imgDest = path.join(calendarDest, img);
-        if (fs.existsSync(imgSource)) {
-          fs.copyFileSync(imgSource, imgDest);
-          console.log(`Copied ${img} to web build`);
+    if (fs.existsSync(sourceFontsDir)) {
+      const fonts = fs.readdirSync(sourceFontsDir);
+      fonts.forEach(font => {
+        const fontSource = path.join(sourceFontsDir, font);
+        const fontDest = path.join(fontsDir, font);
+        if (fs.existsSync(fontSource)) {
+          fs.copyFileSync(fontSource, fontDest);
+          console.log(`Copied ${font} to web build`);
         }
       });
     }
+    
+    // Copy calendar images to the exact path expected
+    const calendarSource = path.join(projectRoot, 'node_modules', 'react-native-calendars', 'src', 'calendar', 'img');
+    
+    const images = ['previous.png', 'next.png'];
+    images.forEach(img => {
+      const imgSource = path.join(calendarSource, img);
+      const imgDest = path.join(calendarDir, img);
+      if (fs.existsSync(imgSource)) {
+        fs.copyFileSync(imgSource, imgDest);
+        console.log(`Copied ${img} to web build`);
+      }
+    });
   }
 };

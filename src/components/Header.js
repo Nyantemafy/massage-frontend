@@ -1,7 +1,7 @@
 // components/Header.js
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { ChevronLeft } from 'lucide-react-native';
 
 const Header = ({ 
   title, 
@@ -24,7 +24,7 @@ const Header = ({
             style={styles.backButton}
           >
             <View style={styles.iconContainer}>
-              <Ionicons name="arrow-back" size={24} color="#333" />
+              <ChevronLeft size={24} color="#333" />
             </View>
           </TouchableOpacity>
         ) : showMenu ? (

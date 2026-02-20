@@ -10,7 +10,15 @@ import {
     Dimensions,
     TouchableWithoutFeedback,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+    Grid, 
+    Calendar, 
+    CreditCard, 
+    CalendarX, 
+    Users, 
+    User, 
+    LogOut 
+} from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { Image } from 'react-native';
 
@@ -39,12 +47,12 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
     }, [visible]);
 
     const menuItems = [
-        { title: 'Tableau de bord', icon: 'grid-outline', screen: 'Dashboard' },
-        { title: 'Emploi du temps', icon: 'calendar-outline', screen: 'Schedule' },
-        { title: 'Paiement', icon: 'card-outline', screen: 'Payment' },
-        { title: 'Congé', icon: 'calendar-clear-outline', screen: 'Leave' },
-        { title: 'Clients', icon: 'people-outline', screen: 'Clients' },
-        { title: 'Profil', icon: 'person-outline', screen: 'Profile' },
+        { title: 'Tableau de bord', icon: Grid, screen: 'Dashboard' },
+        { title: 'Emploi du temps', icon: Calendar, screen: 'Schedule' },
+        { title: 'Paiement', icon: CreditCard, screen: 'Payment' },
+        { title: 'Congé', icon: CalendarX, screen: 'Leave' },
+        { title: 'Clients', icon: Users, screen: 'Clients' },
+        { title: 'Profil', icon: User, screen: 'Profile' },
     ];
 
     const handleNavigation = (screen) => {
@@ -110,7 +118,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                             <View style={styles.profileSection}>
                                 <View style={styles.profileImageContainer}>
                                     <View style={styles.profileImage}>
-                                        <Ionicons name="person" size={48} color="#F8A5C2" />
+                                        <User size={48} color="#F8A5C2" />
                                     </View>
                                 </View>
                                 <Text style={styles.userName}>
@@ -129,7 +137,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                                         style={styles.menuItem}
                                         onPress={() => handleNavigation(item.screen)}
                                     >
-                                        <Ionicons name={item.icon} size={24} color="#666" />
+                                        <item.icon size={24} color="#666" />
                                         <Text style={styles.menuItemText}>{item.title}</Text>
                                     </TouchableOpacity>
                                 ))}
@@ -141,7 +149,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                                     style={styles.logoutButton}
                                     onPress={() => setShowLogoutModal(true)}
                                 >
-                                    <Ionicons name="log-out-outline" size={24} color="#DC143C" />
+                                    <LogOut size={24} color="#DC143C" />
                                     <Text style={styles.logoutButtonText}>Se déconnecter</Text>
                                 </TouchableOpacity>
                             </View>
@@ -166,7 +174,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                             <View style={styles.confirmModalContainer}>
                                 <View style={styles.confirmModalContent}>
                                     <View style={styles.confirmIconContainer}>
-                                        <Ionicons name="log-out-outline" size={50} color="#DC143C" />
+                                        <LogOut size={50} color="#DC143C" />
                                     </View>
                                     <Text style={styles.confirmTitle}>Déconnexion</Text>
                                     <Text style={styles.confirmMessage}>

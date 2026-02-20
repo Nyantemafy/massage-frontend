@@ -9,7 +9,15 @@ import {
   Alert,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  Calendar as CalendarIcon, 
+  Plus, 
+  Grid, 
+  Clock, 
+  User, 
+  Notifications,
+  CalendarDays 
+} from 'lucide-react-native';
 import Header from '../components/Header';
 import CustomDrawer from '../components/CustomDrawer';
 import AppointmentCard from '../components/AppointmentCard';
@@ -85,7 +93,7 @@ const ScheduleScreen = ({ navigation }) => {
         title="Emploi du temps"
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Ionicons name="notifications-outline" size={24} color="#333" />}
+        rightIcon={<Notifications size={24} color="#333" />}
         onRightPress={() => {}}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
@@ -144,7 +152,7 @@ const ScheduleScreen = ({ navigation }) => {
           <ActivityIndicator size="large" color="#F8A5C2" style={styles.loader} />
         ) : appointments.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="calendar-outline" size={64} color="#CCC" />
+            <CalendarDays size={64} color="#CCC" />
             <Text style={styles.emptyText}>Aucun rendez-vous ce jour</Text>
           </View>
         ) : (
@@ -164,7 +172,7 @@ const ScheduleScreen = ({ navigation }) => {
         style={styles.fab}
         onPress={() => navigation.navigate('NewAppointment')}
       >
-        <Ionicons name="add" size={28} color="#FFF" />
+        <Plus size={28} color="#FFF" />
       </TouchableOpacity>
 
       <View style={styles.bottomNav}>
@@ -172,25 +180,25 @@ const ScheduleScreen = ({ navigation }) => {
           style={styles.navItem}
           onPress={() => navigation.navigate('Dashboard')}
         >
-          <Ionicons name="grid-outline" size={24} color="#999" />
+          <Grid size={24} color="#999" />
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navItem}
           onPress={() => navigation.navigate('Schedule')}
         >
-          <Ionicons name="calendar" size={24} color="#F8A5C2" />
+          <CalendarIcon size={24} color="#F8A5C2" />
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navItem}
           onPress={() => navigation.navigate('History')}
         >
-          <Ionicons name="time-outline" size={24} color="#999" />
+          <Clock size={24} color="#999" />
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navItem}
           onPress={() => navigation.navigate('Menu')}
         >
-          <Ionicons name="person-outline" size={24} color="#999" />
+          <User size={24} color="#999" />
         </TouchableOpacity>
       </View>
       
