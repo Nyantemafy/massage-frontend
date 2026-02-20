@@ -8,7 +8,14 @@ import {
     TouchableWithoutFeedback,
     Dimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  X, 
+  CheckCircle2, 
+  XCircle, 
+  AlertTriangle, 
+  HelpCircle, 
+  Info 
+} from 'lucide-react-native';
 import Button from './Button';
 
 const { width } = Dimensions.get('window');
@@ -36,20 +43,21 @@ const CustomModal = ({
         
         switch (type) {
         case 'success':
-            return { name: 'checkmark-circle', color: '#4CAF50' };
+            return { component: CheckCircle2, color: '#4CAF50' };
         case 'error':
-            return { name: 'close-circle', color: '#F44336' };
+            return { component: XCircle, color: '#F44336' };
         case 'warning':
-            return { name: 'warning', color: '#FF9800' };
+            return { component: AlertTriangle, color: '#FF9800' };
         case 'confirm':
-            return { name: 'help-circle', color: '#2196F3' };
+            return { component: HelpCircle, color: '#2196F3' };
         case 'info':
         default:
-            return { name: 'information-circle', color: '#999' };
+            return { component: Info, color: '#999' };
         }
     };
 
     const iconConfig = getIconConfig();
+    const IconComponent = iconConfig.component;
 
     const handleClose = () => {
         if (onClose) onClose();
@@ -79,7 +87,7 @@ const CustomModal = ({
                 {/* Header avec bouton de fermeture */}
                 <View style={styles.header}>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                    <Ionicons name="close" size={24} color="#999" />
+                        <X size={24} color="#999" />
                     </TouchableOpacity>
                 </View>
 
@@ -88,11 +96,7 @@ const CustomModal = ({
                     {/* Icône */}
                     {(iconConfig.name || type) && (
                     <View style={styles.iconContainer}>
-                        <Ionicons 
-                        name={iconConfig.name} 
-                        size={iconSize} 
-                        color={iconConfig.color} 
-                        />
+                        <IconComponent size={iconSize} color={iconConfig.color} />
                     </View>
                     )}
 

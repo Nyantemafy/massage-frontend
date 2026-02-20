@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { User, Bell, Filter, Clock, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import Header from '../components/Header';
 import api from '../config/api';
 import CustomDrawer from '../components/CustomDrawer';
@@ -170,7 +170,7 @@ const HistoryScreen = ({ navigation }) => {
     >
       <View style={styles.cardLeft}>
         <View style={styles.avatar}>
-          <Ionicons name="person-outline" size={32} color="#999" />
+          <User size={32} color="#999" />
         </View>
         <View style={styles.cardInfo}>
           <Text style={styles.clientName}>{item.client_name || 'Client'}</Text>
@@ -216,11 +216,7 @@ const HistoryScreen = ({ navigation }) => {
           onPress={() => goToPage(currentPage - 1)}
           disabled={!hasPrevPage}
         >
-          <Ionicons 
-            name="chevron-back" 
-            size={20} 
-            color={hasPrevPage ? "#F8A5C2" : "#CCC"} 
-          />
+          <ChevronLeft size={20} color={hasPrevPage ? "#F8A5C2" : "#CCC"} />
         </TouchableOpacity>
         
         <Text style={styles.paginationText}>
@@ -233,11 +229,7 @@ const HistoryScreen = ({ navigation }) => {
           onPress={() => goToPage(currentPage + 1)}
           disabled={!hasNextPage}
         >
-          <Ionicons 
-            name="chevron-forward" 
-            size={20} 
-            color={hasNextPage ? "#F8A5C2" : "#CCC"} 
-          />
+          <ChevronLeft size={20} color={hasPrevPage ? "#F8A5C2" : "#CCC"} />
         </TouchableOpacity>
       </View>
     );
@@ -249,7 +241,7 @@ const HistoryScreen = ({ navigation }) => {
         title="Historique des rendez-vous"
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Ionicons name="notifications-outline" size={24} color="#333" />}
+        rightIcon={<Bell size={24} color="#333" />}
         onRightPress={() => {}}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
@@ -260,7 +252,7 @@ const HistoryScreen = ({ navigation }) => {
         style={[styles.filterButton, Object.keys(activeFilters).length > 0 && styles.filterButtonActive]}
         onPress={navigateToFilters}
       >
-        <Ionicons name="filter-outline" size={16} color={Object.keys(activeFilters).length > 0 ? "#FFF" : "#333"} />
+        <Filter size={16} color={Object.keys(activeFilters).length > 0 ? "#FFF" : "#333"} />
         <Text style={[styles.filterButtonText, Object.keys(activeFilters).length > 0 && styles.filterButtonTextActive]}>
           Filtres {Object.keys(activeFilters).length > 0 ? `(${Object.keys(activeFilters).length})` : ''}
         </Text>
@@ -283,7 +275,7 @@ const HistoryScreen = ({ navigation }) => {
             ListFooterComponent={renderFooter}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Ionicons name="time-outline" size={64} color="#CCC" />
+                <Clock size={64} color="#CCC" />
                 <Text style={styles.emptyText}>Aucun rendez-vous</Text>
                 <TouchableOpacity 
                   style={styles.addButton}

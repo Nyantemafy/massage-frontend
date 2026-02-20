@@ -10,7 +10,7 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { X } from 'lucide-react-native';
 
 const InputModal = ({
     visible,
@@ -81,7 +81,7 @@ const InputModal = ({
                 <View style={styles.modalHeader}>
                     <Text style={styles.modalTitle}>{title}</Text>
                     <TouchableOpacity onPress={onClose}>
-                    <Ionicons name="close" size={24} color="#333" />
+                    <X size={24} color="#333" />
                     </TouchableOpacity>
                 </View>
 

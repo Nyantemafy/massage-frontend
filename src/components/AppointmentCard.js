@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-
+import { Package, MapPin, MoreVertical } from 'lucide-react-native';
 const AppointmentCard = ({ 
   appointment, 
   onPress,
@@ -25,7 +24,7 @@ const AppointmentCard = ({
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.iconContainer}>
-        <Ionicons name="cube-outline" size={24} color="#F8A5C2" />
+        <Package size={24} color="#F8A5C2" />
       </View>
       
       <View style={styles.content}>
@@ -45,14 +44,14 @@ const AppointmentCard = ({
         
         {location && (
           <View style={styles.locationContainer}>
-            <Ionicons name="location-outline" size={16} color="#666" />
+            <MapPin size={16} color="#666" />
             <Text style={styles.location}>{location}</Text>
           </View>
         )}
       </View>
       
       <TouchableOpacity style={styles.moreButton}>
-        <Ionicons name="ellipsis-vertical" size={20} color="#999" />
+        <MoreVertical size={20} color="#999" />
       </TouchableOpacity>
     </TouchableOpacity>
   );

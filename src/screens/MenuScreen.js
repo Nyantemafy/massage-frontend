@@ -7,19 +7,19 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { LayoutGrid, Calendar, CreditCard, CalendarOff, Users, User, LogOut } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 
 const MenuScreen = ({ navigation }) => {
   const { user, logout } = useAuth();
 
   const menuItems = [
-    { title: 'Tableau de bord', icon: 'grid-outline', screen: 'Dashboard' },
-    { title: 'Emploi du temps', icon: 'calendar-outline', screen: 'Schedule' },
-    { title: 'Paiement', icon: 'card-outline', screen: 'Payment' },
-    { title: 'Conge', icon: 'calendar-clear-outline', screen: 'Leave' },
-    { title: 'Clients', icon: 'people-outline', screen: 'Clients' },
-    { title: 'Profil', icon: 'person-outline', screen: 'Profile' },
+    { title: 'Tableau de bord', icon: LayoutGrid, screen: 'Dashboard' },
+    { title: 'Emploi du temps', icon: Calendar, screen: 'Schedule' },
+    { title: 'Paiement', icon: CreditCard, screen: 'Payment' },
+    { title: 'Conge', icon: CalendarOff, screen: 'Leave' },
+    { title: 'Clients', icon: Users, screen: 'Clients' },
+    { title: 'Profil', icon: User, screen: 'Profile' },
   ];
 
   const handleLogout = async () => {
@@ -32,7 +32,7 @@ const MenuScreen = ({ navigation }) => {
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <View style={styles.profileImage}>
-              <Ionicons name="person" size={48} color="#999" />
+              <User size={48} color="#999" />
             </View>
           </View>
           <Text style={styles.userName}>Nom et prenom</Text>

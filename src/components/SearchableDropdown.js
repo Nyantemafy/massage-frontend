@@ -10,7 +10,14 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ChevronDown, 
+  X, 
+  Search, 
+  XCircle, 
+  Check, 
+  PlusCircle 
+} from 'lucide-react-native';
 
 const SearchableDropdown = ({
     label,
@@ -97,7 +104,7 @@ const SearchableDropdown = ({
             <Text style={[styles.dropdownText, !selectedItem && styles.placeholderText]}>
             {selectedItem ? getDisplayValue() : placeholder}
             </Text>
-            <Ionicons name="chevron-down" size={20} color="#999" />
+            <ChevronDown size={20} color="#999" />
         </TouchableOpacity>
 
         <Modal
@@ -111,24 +118,24 @@ const SearchableDropdown = ({
                 <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{label || 'Sélectionner'}</Text>
                 <TouchableOpacity onPress={() => setModalVisible(false)}>
-                    <Ionicons name="close" size={24} color="#333" />
+                    <X size={24} color="#333" />
                 </TouchableOpacity>
                 </View>
 
                 <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder={searchPlaceholder}
-                    value={searchText}
-                    onChangeText={setSearchText}
-                    placeholderTextColor="#999"
-                />
-                {searchText ? (
-                    <TouchableOpacity onPress={() => setSearchText('')}>
-                    <Ionicons name="close-circle" size={20} color="#999" />
-                    </TouchableOpacity>
-                ) : null}
+                    <Search size={20} color="#999" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder={searchPlaceholder}
+                        value={searchText}
+                        onChangeText={setSearchText}
+                        placeholderTextColor="#999"
+                    />
+                    {searchText ? (
+                        <TouchableOpacity onPress={() => setSearchText('')}>
+                            <XCircle size={20} color="#999" />
+                        </TouchableOpacity>
+                    ) : null}
                 </View>
 
                 {loading ? (
@@ -144,7 +151,7 @@ const SearchableDropdown = ({
                     >
                         <Text style={styles.itemText}>{item[displayField]}</Text>
                         {selectedItem?.id === item.id && (
-                        <Ionicons name="checkmark" size={20} color="#F8A5C2" />
+                            <Check size={20} color="#F8A5C2" />
                         )}
                     </TouchableOpacity>
                     )}
@@ -158,7 +165,7 @@ const SearchableDropdown = ({
 
                 {onCreateNew && (
                 <TouchableOpacity style={styles.addButton} onPress={handleCreateNew}>
-                    <Ionicons name="add-circle" size={24} color="#F8A5C2" />
+                    <PlusCircle size={24} color="#F8A5C2" />
                     <Text style={styles.addButtonText}>Ajouter nouveau</Text>
                 </TouchableOpacity>
                 )}

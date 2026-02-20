@@ -15,7 +15,7 @@ import {
   Grid, 
   Clock, 
   User, 
-  Notifications,
+  Bell,
   CalendarDays 
 } from 'lucide-react-native';
 import Header from '../components/Header';
@@ -93,7 +93,7 @@ const ScheduleScreen = ({ navigation }) => {
         title="Emploi du temps"
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Notifications size={24} color="#333" />}
+        rightIcon={<Bell size={24} color="#333" />}
         onRightPress={() => {}}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
@@ -180,7 +180,7 @@ const ScheduleScreen = ({ navigation }) => {
           style={styles.navItem}
           onPress={() => navigation.navigate('Dashboard')}
         >
-          <Grid size={24} color="#999" />
+          <LayoutGrid size={24} color="#999" /> 
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navItem}

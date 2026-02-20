@@ -9,7 +9,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Calendar, ChevronDown, Clock, Bell } from 'lucide-react-native';
 import Header from '../components/Header';
 import Input from '../components/Input';
 import Button from '../components/Button';
@@ -383,11 +383,11 @@ const NewAppointmentScreen = ({ navigation }) => {
           style={styles.dateInput}
           onPress={showDatePicker}
         >
-          <Ionicons name="calendar-outline" size={20} color="#999" />
+          <Calendar size={20} color="#999" />
           <Text style={[styles.dateInputText, formData.date && styles.selectedText]}>
             {formData.date || 'Date *'}
           </Text>
-          <Ionicons name="chevron-down" size={20} color="#999" />
+          <ChevronDown size={20} color="#999" />
         </TouchableOpacity>
 
         {DateTimePickerModal && (
@@ -440,7 +440,7 @@ const NewAppointmentScreen = ({ navigation }) => {
             style={styles.timeInput}
             onPress={showStartTimePicker}
           >
-            <Ionicons name="time-outline" size={20} color="#999" />
+            <Clock size={20} color="#999" />
             <Text style={[styles.timeInputText, formData.start_time && styles.selectedText]}>
               {formData.start_time || 'Heure début *'}
             </Text>
@@ -450,7 +450,7 @@ const NewAppointmentScreen = ({ navigation }) => {
             style={styles.timeInput}
             onPress={showEndTimePicker}
           >
-            <Ionicons name="time-outline" size={20} color="#999" />
+            <Clock size={64} color="#CCC" />
             <Text style={[styles.timeInputText, formData.end_time && styles.selectedText]}>
               {formData.end_time || 'Heure fin'}
             </Text>
@@ -506,7 +506,7 @@ const NewAppointmentScreen = ({ navigation }) => {
         title="Ajouter rendez-vous"
         showBack
         onBackPress={() => navigation.goBack()}
-        rightIcon={<Ionicons name="notifications-outline" size={24} color="#333" />}
+        rightIcon={<Bell size={24} color="#333" />}
       />
 
       <ScrollView style={styles.content}>
@@ -569,10 +569,9 @@ const NewAppointmentScreen = ({ navigation }) => {
           style={styles.notificationRow}
           onPress={() => updateField('send_notification', !formData.send_notification)}
         >
-          <Ionicons 
-            name={formData.send_notification ? "notifications" : "notifications-outline"} 
+          <Bell 
             size={20} 
-            color="#999" 
+            color={formData.send_notification ? "#F8A5C2" : "#999"} 
           />
           <Text style={styles.notificationText}>
             {formData.send_notification ? 'Notification activée' : 'Envoyer une notification'}

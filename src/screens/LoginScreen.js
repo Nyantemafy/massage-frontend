@@ -12,7 +12,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { Ionicons } from '@expo/vector-icons';
+import { LogIn, UserPlus, Globe } from 'lucide-react-native';
 
 const LoginScreen = ({ navigation }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -211,7 +211,7 @@ const LoginScreen = ({ navigation }) => {
             style={styles.googleButton}
             onPress={handleGoogleLogin}
           >
-            <Ionicons name="logo-google" size={24} color="#DB4437" />
+            <Globe size={24} color="#DB4437" />
             <Text style={styles.googleButtonText}>
               {isLogin ? "se connecter avec Google" : "s'inscrire avec Google"}
             </Text>

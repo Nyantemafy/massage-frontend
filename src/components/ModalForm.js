@@ -11,7 +11,7 @@ import {
     ScrollView,
     TextInput,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { X } from 'lucide-react-native';
 import Input from './Input';
 import Button from './Button';
 
@@ -168,7 +168,7 @@ const ModalForm = ({
                 <View style={styles.header}>
                     <Text style={styles.title}>{title}</Text>
                     <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                    <Ionicons name="close" size={24} color="#999" />
+                        <X size={24} color="#999" />
                     </TouchableOpacity>
                 </View>
 

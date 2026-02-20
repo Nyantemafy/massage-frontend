@@ -8,7 +8,18 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  Clock, 
+  Hourglass, 
+  MapPin, 
+  Calendar, 
+  AlertCircle, 
+  User, 
+  Tag, 
+  Pencil,
+  Bell,
+  Palette, Accessibility, Dumbbell
+} from 'lucide-react-native';
 import Header from '../components/Header';
 import api from '../config/api';
 
@@ -97,7 +108,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
         return (
           <View style={styles.tabContent}>
             <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={24} color="#F8A5C2" />
+              <Clock size={24} color="#F8A5C2" />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Heure de début</Text>
                 <Text style={styles.detailValue}>{formatTime(appointment?.start_time)}</Text>
@@ -105,7 +116,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
             </View>
             
             <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={24} color="#F8A5C2" />
+              <Clock size={24} color="#F8A5C2" />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Heure de fin</Text>
                 <Text style={styles.detailValue}>{formatTime(appointment?.end_time) || 'Non définie'}</Text>
@@ -113,7 +124,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
             </View>
             
             <View style={styles.detailRow}>
-              <Ionicons name="hourglass-outline" size={24} color="#F8A5C2" />
+              <Hourglass size={24} color="#F8A5C2" />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Durée totale</Text>
                 <Text style={[styles.detailValue, styles.durationValue]}>{calculateDuration()}</Text>
@@ -126,7 +137,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
         return (
           <View style={styles.tabContent}>
             <View style={styles.detailRow}>
-              <Ionicons name="location-outline" size={24} color="#F8A5C2" />
+              <MapPin size={24} color="#F8A5C2" />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Adresse</Text>
                 <Text style={styles.detailValue}>
@@ -147,7 +158,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
                   Linking.openURL(url);
                 }}
               >
-                <Ionicons name="map-outline" size={20} color="#FFF" />
+                <MapPin size={24} color="#F8A5C2" />
                 <Text style={styles.mapButtonText}>Voir sur la carte</Text>
               </TouchableOpacity>
             )}
@@ -158,7 +169,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
         return (
           <View style={styles.tabContent}>
             <View style={styles.detailRow}>
-              <Ionicons name="calendar-outline" size={24} color="#F8A5C2" />
+              <Calendar size={20} color="#F8A5C2" />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Date du rendez-vous</Text>
                 <Text style={styles.detailValue}>{formatDate(appointment?.date)}</Text>
@@ -166,7 +177,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
             </View>
             
             <View style={styles.detailRow}>
-              <Ionicons name="time-outline" size={24} color="#F8A5C2" />
+              <Clock size={24} color="#F8A5C2" />
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailLabel}>Horaire</Text>
                 <Text style={styles.detailValue}>
@@ -245,7 +256,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
           onBackPress={() => navigation.goBack()}
         />
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={64} color="#CCC" />
+          <AlertCircle size={64} color="#CCC" />
           <Text style={styles.errorText}>Rendez-vous introuvable</Text>
         </View>
       </View>
@@ -260,8 +271,8 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
         onBackPress={() => navigation.goBack()}
         rightIcon={
           <View style={styles.headerIcons}>
-            <Ionicons name="color-palette-outline" size={24} color="#333" />
-            <Ionicons name="notifications-outline" size={24} color="#333" style={{ marginLeft: 15 }} />
+            <Palette size={24} color="#333" />
+            <Bell size={24} color="#333" />
           </View>
         }
       />
@@ -269,7 +280,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
       <ScrollView style={styles.content}>
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
-            <Ionicons name="person-outline" size={64} color="#F8A5C2" />
+            <User size={32} color="#999" />
           </View>
         </View>
 
@@ -278,11 +289,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
             style={[styles.tab, activeTab === 'duree' && styles.activeTab]}
             onPress={() => setActiveTab('duree')}
           >
-            <Ionicons 
-              name="time-outline" 
-              size={20} 
-              color={activeTab === 'duree' ? '#F8A5C2' : '#999'} 
-            />
+            <Clock size={24} color={activeTab === 'duree' ? '#F8A5C2' : '#999'} />
             <Text style={[styles.tabText, activeTab === 'duree' && styles.activeTabText]}>
               Durée
             </Text>
@@ -292,11 +299,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
             style={[styles.tab, activeTab === 'lieu' && styles.activeTab]}
             onPress={() => setActiveTab('lieu')}
           >
-            <Ionicons 
-              name="location-outline" 
-              size={20} 
-              color={activeTab === 'lieu' ? '#F8A5C2' : '#999'} 
-            />
+            <MapPin size={24} color={activeTab === 'lieu' ? '#F8A5C2' : '#999'} />
             <Text style={[styles.tabText, activeTab === 'lieu' && styles.activeTabText]}>
               Lieu
             </Text>
@@ -306,11 +309,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
             style={[styles.tab, activeTab === 'Date' && styles.activeTab]}
             onPress={() => setActiveTab('Date')}
           >
-            <Ionicons 
-              name="calendar-outline" 
-              size={20} 
-              color={activeTab === 'Date' ? '#F8A5C2' : '#999'} 
-            />
+            <Calendar size={20} color={activeTab === 'Date' ? '#F8A5C2' : '#999'} />
             <Text style={[styles.tabText, activeTab === 'Date' && styles.activeTabText]}>
               Date
             </Text>
@@ -328,26 +327,26 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
           
           <View style={styles.clientCard}>
             <View style={styles.clientInfoRow}>
-              <Ionicons name="person-outline" size={20} color="#666" />
+              <User size={32} color="#999" />
               <Text style={styles.clientInfoLabel}>Client:</Text>
               <Text style={styles.clientInfoValue}>{appointment.client_name || 'Non spécifié'}</Text>
             </View>
             
             <View style={styles.clientInfoRow}>
-              <Ionicons name="body-outline" size={20} color="#666" />
+              <Accessibility size={20} color="#666" />
               <Text style={styles.clientInfoLabel}>Type massage:</Text>
               <Text style={styles.clientInfoValue}>{appointment.type_massage || 'Non spécifié'}</Text>
             </View>
             
             <View style={styles.clientInfoRow}>
-              <Ionicons name="pricetag-outline" size={20} color="#666" />
+              <Tag size={20} color="#666" />
               <Text style={styles.clientInfoLabel}>Offre:</Text>
               <Text style={styles.clientInfoValue}>{appointment.offer || 'Non spécifié'}</Text>
             </View>
             
             {appointment.masseur_name && (
               <View style={styles.clientInfoRow}>
-                <Ionicons name="fitness-outline" size={20} color="#666" />
+                <Dumbbell size={20} color="#666" />
                 <Text style={styles.clientInfoLabel}>Masseur:</Text>
                 <Text style={styles.clientInfoValue}>{appointment.masseur_name}</Text>
               </View>
@@ -370,7 +369,7 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
             style={styles.editButton}
             onPress={() => navigation.navigate('EditAppointment', { id: appointment.id })}
           >
-            <Ionicons name="create-outline" size={20} color="#FFF" />
+            <Pencil size={20} color="#FFF" />
             <Text style={styles.editButtonText}>Modifier</Text>
           </TouchableOpacity>
         </View>

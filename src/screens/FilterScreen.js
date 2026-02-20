@@ -8,7 +8,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Search, Palette, Bell, Calendar, RefreshCcw, Check, Info } from 'lucide-react-native';
 import Header from '../components/Header';
 import Input from '../components/Input';
 import SearchableDropdown from '../components/SearchableDropdown';
@@ -225,7 +225,7 @@ const FilterScreen = ({ navigation, route }) => {
           style={styles.dateInput}
           onPress={showPicker}
         >
-          <Ionicons name="calendar-outline" size={20} color="#999" />
+          <Calendar size={20} color="#999" />
           <Text style={[styles.dateInputText, value && styles.selectedText]}>
             {value || label}
           </Text>
@@ -253,8 +253,8 @@ const FilterScreen = ({ navigation, route }) => {
         onBackPress={() => navigation.goBack()}
         rightIcon={
           <View style={styles.headerIcons}>
-            <Ionicons name="color-palette-outline" size={24} color="#333" />
-            <Ionicons name="notifications-outline" size={24} color="#333" style={{ marginLeft: 15 }} />
+            <Palette size={24} color="#333" />
+            <Bell size={24} color="#333" />
           </View>
         }
       />
@@ -267,7 +267,7 @@ const FilterScreen = ({ navigation, route }) => {
             placeholder="Rechercher un client, une offre..."
             value={filters.searchTerm}
             onChangeText={(text) => updateFilter('searchTerm', text)}
-            leftIcon={<Ionicons name="search-outline" size={20} color="#999" />}
+            leftIcon={<Search size={20} color="#999" />}
           />
         </View>
 
@@ -374,7 +374,7 @@ const FilterScreen = ({ navigation, route }) => {
         {/* Indicateur de filtres actifs */}
         {hasActiveFilters() && (
           <View style={styles.activeFiltersContainer}>
-            <Ionicons name="information-circle-outline" size={20} color="#F8A5C2" />
+            <Info size={20} color="#F8A5C2" />
             <Text style={styles.activeFiltersText}>
               Des filtres sont appliqués
             </Text>
@@ -387,7 +387,7 @@ const FilterScreen = ({ navigation, route }) => {
             style={styles.resetButton}
             onPress={resetFilters}
           >
-            <Ionicons name="refresh-outline" size={20} color="#F8A5C2" />
+            <RefreshCcw size={20} color="#F8A5C2" />
             <Text style={styles.resetButtonText}>Réinitialiser</Text>
           </TouchableOpacity>
           
@@ -396,7 +396,7 @@ const FilterScreen = ({ navigation, route }) => {
             onPress={applyFilters}
           >
             <Text style={styles.applyButtonText}>Appliquer les filtres</Text>
-            <Ionicons name="checkmark-outline" size={20} color="#FFF" />
+            <Check size={20} color="#FFF" />
           </TouchableOpacity>
         </View>
       </ScrollView>
