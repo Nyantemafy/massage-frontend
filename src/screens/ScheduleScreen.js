@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { 
-  Calendar as CalendarIcon, 
+  Calendar as CalendarLucide, 
   Plus, 
   Grid, 
   Clock, 
@@ -186,7 +186,7 @@ const ScheduleScreen = ({ navigation }) => {
           style={styles.navItem}
           onPress={() => navigation.navigate('Schedule')}
         >
-          <CalendarIcon size={24} color="#F8A5C2" />
+          <CalendarLucide size={24} color="#F8A5C2" />
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.navItem}

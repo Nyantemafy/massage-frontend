@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { 
     Grid, 
-    Calendar, 
+    Calendar as CalendarLucide, 
     CreditCard, 
     CalendarX, 
     Users, 
@@ -48,7 +48,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
 
     const menuItems = [
         { title: 'Tableau de bord', icon: Grid, screen: 'Dashboard' },
-        { title: 'Emploi du temps', icon: Calendar, screen: 'Schedule' },
+        { title: 'Emploi du temps', icon: CalendarLucide, screen: 'Schedule' },
         { title: 'Paiement', icon: CreditCard, screen: 'Payment' },
         { title: 'Congé', icon: CalendarX, screen: 'Leave' },
         { title: 'Clients', icon: Users, screen: 'Clients' },
