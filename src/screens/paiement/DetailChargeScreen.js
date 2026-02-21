@@ -42,20 +42,25 @@ const DetailChargeScreen = ({ navigation, route }) => {
   const loadCharge = async () => {
     setLoading(true);
     try {
+      let response;
+      
       // Si c'est un paiement de la table payments
       if (type === 'paiement') {
-        const response = await api.get(`/payments/${id}`, {
+        console.log('Chargement paiement ID:', id);
+        response = await api.get(`/paiement/${id}`, {  // ← URL corrigée
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        setCharge(response.data);
       } 
       // Si c'est une charge de la table expenses
       else {
-        const response = await api.get(`/expense/${id}`, {
+        console.log('Chargement expense ID:', id);
+        response = await api.get(`/expense/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        setCharge(response.data);
       }
+      
+      console.log('Données reçues:', response.data);
+      setCharge(response.data);
     } catch (error) {
       console.error('Erreur chargement charge:', error);
       Alert.alert('Erreur', 'Impossible de charger les détails');
@@ -127,8 +132,8 @@ const DetailChargeScreen = ({ navigation, route }) => {
   };
 
   const formatAmount = (amount) => {
-    if (!amount) return '0 FCFA';
-    return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+    if (!amount) return '0 AR';
+    return new Intl.NumberFormat('fr-FR').format(amount) + ' AR';
   };
 
   if (loading) {
@@ -136,10 +141,8 @@ const DetailChargeScreen = ({ navigation, route }) => {
       <View style={styles.container}>
         <Header
           title="Détail charge"
-          showMenu={true}
-          onMenuPress={() => setDrawerVisible(true)}
-          leftIcon={<ArrowLeft size={24} color="#333" />}
-          onLeftPress={() => navigation.goBack()}
+          showBack
+          onBackPress={() => navigation.goBack()}
         />
         <ActivityIndicator size="large" color="#F8A5C2" style={styles.loader} />
       </View>
@@ -151,10 +154,8 @@ const DetailChargeScreen = ({ navigation, route }) => {
       <View style={styles.container}>
         <Header
           title="Détail charge"
-          showMenu={true}
-          onMenuPress={() => setDrawerVisible(true)}
-          leftIcon={<ArrowLeft size={24} color="#333" />}
-          onLeftPress={() => navigation.goBack()}
+          showBack
+          onBackPress={() => navigation.goBack()}
         />
         <View style={styles.errorContainer}>
           <AlertCircle size={64} color="#CCC" />
@@ -168,10 +169,8 @@ const DetailChargeScreen = ({ navigation, route }) => {
     <View style={styles.container}>
       <Header
         title="Détail charge"
-        showMenu={true}
-        onMenuPress={() => setDrawerVisible(true)}
-        leftIcon={<ArrowLeft size={24} color="#333" />}
-        onLeftPress={() => navigation.goBack()}
+        showBack
+        onBackPress={() => navigation.goBack()}
       />
 
       <ScrollView style={styles.content}>

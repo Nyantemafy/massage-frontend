@@ -22,12 +22,16 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Search
+  Search,
+  Users,
+  Tag,
+  DollarSign
 } from 'lucide-react-native';
 import Header from '../../components/Header';
 import CustomDrawer from '../../components/CustomDrawer';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import SearchableDropdown from '../../components/SearchableDropdown';
 
 const { width } = Dimensions.get('window');
 
@@ -38,10 +42,15 @@ const HistoriquePaiementScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [paiements, setPaiements] = useState([]);
+  const [filteredPaiements, setFilteredPaiements] = useState([]);
   const [stats, setStats] = useState({
     total_amount: 0,
     payment_count: 0
   });
+
+  // Données pour les dropdowns
+  const [masseuses, setMasseuses] = useState([]);
+  const [offres, setOffres] = useState([]);
 
   // États pour les filtres
   const [filters, setFilters] = useState({
@@ -51,6 +60,8 @@ const HistoriquePaiementScreen = ({ navigation }) => {
     montantMax: '',
     start_date: '',
     end_date: '',
+    masseuse_id: '',
+    offre_id: '',
   });
 
   // États pour les filtres temporaires (avant validation)
@@ -59,33 +70,116 @@ const HistoriquePaiementScreen = ({ navigation }) => {
     titre: '',
     montantMin: '',
     montantMax: '',
+    start_date: '',
+    end_date: '',
+    masseuse_id: '',
+    masseuse_name: '',
+    offre_id: '',
+    offre_name: '',
   });
+
+  // Charger les données initiales
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      
+      // Charger les masseuses (users avec rôle masseuse)
+      const masseusesRes = await api.get('/users/masseurs', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setMasseuses(masseusesRes.data);
+
+      // Charger les offres de massage
+      const offresRes = await api.get('/massage/massage-offers', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setOffres(offresRes.data);
+
+      // Charger l'historique des paiements
+      await loadPaymentHistory();
+    } catch (error) {
+      console.error('❌ Erreur chargement données:', error);
+    }
+  };
 
   // Charger l'historique des paiements
   const loadPaymentHistory = async () => {
     setLoading(true);
     try {
+      
       const params = {};
       
-      if (filters.status) params.status = filters.status;
-      if (filters.titre) params.titre = filters.titre;
-      if (filters.montantMin) params.montant_min = filters.montantMin;
-      if (filters.montantMax) params.montant_max = filters.montantMax;
-      if (filters.start_date) params.start_date = filters.start_date;
-      if (filters.end_date) params.end_date = filters.end_date;
+      if (filters.status) {
+        params.status = filters.status;
+      }
+      if (filters.titre) {
+        params.titre = filters.titre;
+      }
+      if (filters.start_date) {
+        params.start_date = filters.start_date;
+      }
+      if (filters.end_date) {
+        params.end_date = filters.end_date;
+      }
+      if (filters.masseuse_id) {
+        params.masseur_id = filters.masseuse_id;
+      }
+      if (filters.offre_id) {
+        params.offer_id = filters.offre_id;
+      }
 
       const response = await api.get('/paiement/history', {
         params,
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
-      setPaiements(response.data);
+      let data = response.data;
+
+      // Filtrage côté client pour les montants
+      if (filters.montantMin) {
+        data = data.filter(p => p.amount >= parseFloat(filters.montantMin));
+      }
+      if (filters.montantMax) {
+        data = data.filter(p => p.amount <= parseFloat(filters.montantMax));
+      }
+
+      setPaiements(data);
+      applyClientFilters(data);
     } catch (error) {
-      console.error('Erreur chargement historique:', error);
+      console.error('❌ Erreur chargement historique:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Appliquer les filtres côté client (recherche texte)
+  const applyClientFilters = (data) => {
+    let filtered = [...data];
+
+    // Filtre par titre/recherche texte
+    if (filters.titre) {
+      const searchTerm = filters.titre.toLowerCase();
+      filtered = filtered.filter(p => 
+        (p.offer_name && p.offer_name.toLowerCase().includes(searchTerm)) ||
+        (p.client_name && p.client_name.toLowerCase().includes(searchTerm)) ||
+        (p.masseur_name && p.masseur_name.toLowerCase().includes(searchTerm))
+      );
+    }
+
+    setFilteredPaiements(filtered);
+  };
+
+  useEffect(() => {
+    applyClientFilters(paiements);
+  }, [paiements, filters.titre]);
+
+  useEffect(() => {
+    loadPaymentHistory();
+    loadStats();
+  }, [filters.status, filters.start_date, filters.end_date, filters.masseuse_id, filters.offre_id, filters.montantMin, filters.montantMax]);
 
   // Charger les statistiques
   const loadStats = async () => {
@@ -100,11 +194,6 @@ const HistoriquePaiementScreen = ({ navigation }) => {
     }
   };
 
-  useEffect(() => {
-    loadPaymentHistory();
-    loadStats();
-  }, [filters]);
-
   // Rafraîchir
   const onRefresh = () => {
     setRefreshing(true);
@@ -113,13 +202,19 @@ const HistoriquePaiementScreen = ({ navigation }) => {
 
   // Appliquer les filtres
   const applyFilters = () => {
-    setFilters({
-      ...filters,
+    
+    const newFilters = {
       status: tempFilters.status,
       titre: tempFilters.titre,
       montantMin: tempFilters.montantMin,
       montantMax: tempFilters.montantMax,
-    });
+      start_date: tempFilters.start_date,
+      end_date: tempFilters.end_date,
+      masseuse_id: tempFilters.masseuse_id,
+      offre_id: tempFilters.offre_id,
+    };
+    
+    setFilters(newFilters);
     setFilterVisible(false);
   };
 
@@ -130,6 +225,12 @@ const HistoriquePaiementScreen = ({ navigation }) => {
       titre: '',
       montantMin: '',
       montantMax: '',
+      start_date: '',
+      end_date: '',
+      masseuse_id: '',
+      masseuse_name: '',
+      offre_id: '',
+      offre_name: '',
     });
     setFilters({
       status: '',
@@ -138,6 +239,8 @@ const HistoriquePaiementScreen = ({ navigation }) => {
       montantMax: '',
       start_date: '',
       end_date: '',
+      masseuse_id: '',
+      offre_id: '',
     });
     setFilterVisible(false);
   };
@@ -194,7 +297,7 @@ const HistoriquePaiementScreen = ({ navigation }) => {
         <View style={styles.paiementTitleContainer}>
           {getStatusIcon(paiement.payment_status || paiement.status)}
           <Text style={styles.paiementTitre}>
-            {paiement.offer_name || paiement.titre || 'Paiement'}
+            Offre {paiement.offer_name || paiement.titre || 'Paiement'}
           </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(paiement.payment_status || paiement.status) + '20' }]}>
@@ -217,25 +320,25 @@ const HistoriquePaiementScreen = ({ navigation }) => {
         </View>
       </View>
 
+      {paiement.masseur_name && (
+        <View style={styles.masseurInfo}>
+          <Users size={16} color="#999" />
+          <Text style={styles.infoText}>Masseur: {paiement.masseur_name}</Text>
+        </View>
+      )}
+
       <View style={styles.paiementFooter}>
         <View>
           <Text style={styles.montantLabel}>Montant</Text>
           <Text style={styles.montantValue}>{formatAmount(paiement.amount)}</Text>
         </View>
-        {paiement.appointment_date && (
+        {paiement.offer_name && (
           <View>
-            <Text style={styles.montantLabel}>Rendez-vous</Text>
-            <Text style={styles.montantValue}>{formatDate(paiement.appointment_date)}</Text>
+            <Text style={styles.montantLabel}>Offre</Text>
+            <Text style={styles.montantValue}>{paiement.offer_name}</Text>
           </View>
         )}
       </View>
-
-      {paiement.masseur_name && (
-        <View style={styles.motifContainer}>
-          <Text style={styles.motifLabel}>Masseur</Text>
-          <Text style={styles.motifValue}>{paiement.masseur_name}</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 
@@ -254,6 +357,12 @@ const HistoriquePaiementScreen = ({ navigation }) => {
             titre: filters.titre,
             montantMin: filters.montantMin,
             montantMax: filters.montantMax,
+            start_date: filters.start_date,
+            end_date: filters.end_date,
+            masseuse_id: filters.masseuse_id,
+            masseuse_name: '',
+            offre_id: filters.offre_id,
+            offre_name: '',
           });
           setFilterVisible(true);
         }}
@@ -262,12 +371,14 @@ const HistoriquePaiementScreen = ({ navigation }) => {
       {/* Statistiques rapides */}
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{stats.payment_count || 0}</Text>
+          <Text style={styles.statValue}>{filteredPaiements.length}</Text>
           <Text style={styles.statLabel}>Paiements</Text>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statValue}>{formatAmount(stats.total_amount || 0)}</Text>
+          <Text style={styles.statValue}>
+            {formatAmount(filteredPaiements.reduce((sum, p) => sum + p.amount, 0))}
+          </Text>
           <Text style={styles.statLabel}>Total</Text>
         </View>
       </View>
@@ -285,19 +396,19 @@ const HistoriquePaiementScreen = ({ navigation }) => {
       >
         {loading && !refreshing ? (
           <ActivityIndicator size="large" color="#F8A5C2" style={styles.loader} />
-        ) : paiements.length === 0 ? (
+        ) : filteredPaiements.length === 0 ? (
           <View style={styles.emptyContainer}>
             <CreditCard size={64} color="#CCC" />
             <Text style={styles.emptyText}>Aucun paiement trouvé</Text>
           </View>
         ) : (
           <View style={styles.paiementsList}>
-            {paiements.map(renderPaiementCard)}
+            {filteredPaiements.map(renderPaiementCard)}
           </View>
         )}
       </ScrollView>
 
-      {/* Modal de filtre - Version maquette */}
+      {/* Modal de filtre */}
       <Modal
         visible={filterVisible}
         transparent
@@ -307,87 +418,141 @@ const HistoriquePaiementScreen = ({ navigation }) => {
         <TouchableWithoutFeedback onPress={() => setFilterVisible(false)}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>filtre</Text>
-                  <TouchableOpacity onPress={() => setFilterVisible(false)}>
-                    <X size={24} color="#333" />
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.modalContent}>
-                  {/* Status du charge */}
-                  <View style={styles.filterSection}>
-                    <Text style={styles.filterLabel}>Status du charge</Text>
-                    <View style={styles.statusContainer}>
-                      {['payé', 'en attente', 'partiel'].map((status) => (
-                        <TouchableOpacity
-                          key={status}
-                          style={[
-                            styles.statusChip,
-                            tempFilters.status === status && styles.statusChipActive
-                          ]}
-                          onPress={() => setTempFilters({...tempFilters, status})}
-                        >
-                          <Text style={[
-                            styles.statusChipText,
-                            tempFilters.status === status && styles.statusChipTextActive
-                          ]}>
-                            {status}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
+              <ScrollView style={styles.modalScrollView}>
+                <View style={styles.modalContainer}>
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>filtres avancés</Text>
+                    <TouchableOpacity onPress={() => setFilterVisible(false)}>
+                      <X size={24} color="#333" />
+                    </TouchableOpacity>
                   </View>
 
-                  {/* Titre charge */}
-                  <View style={styles.filterSection}>
-                    <Text style={styles.filterLabel}>Titre charge</Text>
-                    <View style={styles.inputWrapper}>
-                      <TextInput
-                        style={styles.filterInput}
-                        placeholder="Entrer titre"
-                        placeholderTextColor="#999"
-                        value={tempFilters.titre}
-                        onChangeText={(text) => setTempFilters({...tempFilters, titre: text})}
-                      />
-                    </View>
-                  </View>
-
-                  {/* Montant entre */}
-                  <View style={styles.filterSection}>
-                    <Text style={styles.filterLabel}>Montant entre</Text>
-                    <View style={styles.montantRangeContainer}>
-                      <View style={styles.montantInputWrapper}>
-                        <TextInput
-                          style={styles.montantInput}
-                          placeholder="entre"
-                          placeholderTextColor="#999"
-                          value={tempFilters.montantMin}
-                          onChangeText={(text) => setTempFilters({...tempFilters, montantMin: text})}
-                          keyboardType="numeric"
-                        />
+                  <View style={styles.modalContent}>
+                    {/* Période - Date de début et fin */}
+                    <View style={styles.filterSection}>
+                      <Text style={styles.filterLabel}>Période</Text>
+                      <View style={styles.dateRangeContainer}>
+                        <View style={styles.dateInputWrapper}>
+                          <Text style={styles.dateLabel}>Du</Text>
+                          <TextInput
+                            style={styles.dateInput}
+                            placeholder="JJ/MM/AAAA"
+                            placeholderTextColor="#999"
+                            value={tempFilters.start_date}
+                            onChangeText={(text) => setTempFilters({...tempFilters, start_date: text})}
+                          />
+                        </View>
+                        <View style={styles.dateInputWrapper}>
+                          <Text style={styles.dateLabel}>Au</Text>
+                          <TextInput
+                            style={styles.dateInput}
+                            placeholder="JJ/MM/AAAA"
+                            placeholderTextColor="#999"
+                            value={tempFilters.end_date}
+                            onChangeText={(text) => setTempFilters({...tempFilters, end_date: text})}
+                          />
+                        </View>
                       </View>
                     </View>
-                  </View>
 
-                  {/* Boutons d'action */}
-                  <View style={styles.filterActions}>
-                    <TouchableOpacity 
-                      style={styles.resetButton}
-                      onPress={resetFilters}
-                    >
-                      <Text style={styles.resetButtonText}>Réinitialiser</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={styles.applyButton}
-                      onPress={applyFilters}
-                    >
-                      <Text style={styles.applyButtonText}>Appliquer</Text>
-                    </TouchableOpacity>
+                    {/* Masseuse */}
+                    <View style={styles.filterSection}>
+                      <Text style={styles.filterLabel}>Masseuse</Text>
+                      <SearchableDropdown
+                        placeholder="Sélectionner une masseuse"
+                        value={masseuses.find(m => m.id === tempFilters.masseuse_id)}
+                        onSelect={(item) => setTempFilters({
+                          ...tempFilters, 
+                          masseuse_id: item.id,
+                          masseuse_name: item.first_name + ' ' + item.last_name
+                        })}
+                        fetchData={() => Promise.resolve(masseuses)}
+                        displayField="first_name"
+                        valueField="id"
+                        searchPlaceholder="Rechercher une masseuse..."
+                        renderItem={(item) => (
+                          <View style={styles.dropdownItem}>
+                            <User size={16} color="#F8A5C2" />
+                            <Text style={styles.dropdownItemText}>
+                              {item.first_name} {item.last_name}
+                            </Text>
+                          </View>
+                        )}
+                        getDisplayValue={(item) => item ? `${item.first_name} ${item.last_name}` : ''}
+                      />
+                    </View>
+
+                    {/* Offre */}
+                    <View style={styles.filterSection}>
+                      <Text style={styles.filterLabel}>Offre</Text>
+                      <SearchableDropdown
+                        placeholder="Sélectionner une offre"
+                        value={offres.find(o => o.id === tempFilters.offre_id)}
+                        onSelect={(item) => setTempFilters({
+                          ...tempFilters, 
+                          offre_id: item.id,
+                          offre_name: item.name
+                        })}
+                        fetchData={() => Promise.resolve(offres)}
+                        displayField="name"
+                        valueField="id"
+                        searchPlaceholder="Rechercher une offre..."
+                        renderItem={(item) => (
+                          <View style={styles.dropdownItem}>
+                            <Tag size={16} color="#F8A5C2" />
+                            <Text style={styles.dropdownItemText}>{item.name}</Text>
+                          </View>
+                        )}
+                        getDisplayValue={(item) => item ? item.name : ''}
+                      />
+                    </View>
+
+                    {/* Montant entre */}
+                    <View style={styles.filterSection}>
+                      <Text style={styles.filterLabel}>Montant entre</Text>
+                      <View style={styles.montantRangeContainer}>
+                        <View style={styles.montantInputWrapper}>
+                          <TextInput
+                            style={styles.montantInput}
+                            placeholder="Min"
+                            placeholderTextColor="#999"
+                            value={tempFilters.montantMin}
+                            onChangeText={(text) => setTempFilters({...tempFilters, montantMin: text})}
+                            keyboardType="numeric"
+                          />
+                        </View>
+                        <Text style={styles.montantSeparator}>-</Text>
+                        <View style={styles.montantInputWrapper}>
+                          <TextInput
+                            style={styles.montantInput}
+                            placeholder="Max"
+                            placeholderTextColor="#999"
+                            value={tempFilters.montantMax}
+                            onChangeText={(text) => setTempFilters({...tempFilters, montantMax: text})}
+                            keyboardType="numeric"
+                          />
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Boutons d'action */}
+                    <View style={styles.filterActions}>
+                      <TouchableOpacity 
+                        style={styles.resetButton}
+                        onPress={resetFilters}
+                      >
+                        <Text style={styles.resetButtonText}>Réinitialiser</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity 
+                        style={styles.applyButton}
+                        onPress={applyFilters}
+                      >
+                        <Text style={styles.applyButtonText}>Appliquer</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-              </View>
+              </ScrollView>
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
@@ -496,6 +661,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  masseurInfo: {
+    marginBottom: 10,
+  },
   paiementFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -511,20 +679,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  motifContainer: {
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingTop: 10,
-  },
-  motifLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
-  },
-  motifValue: {
-    fontSize: 14,
-    color: '#333',
-  },
   loader: {
     marginTop: 50,
   },
@@ -538,18 +692,23 @@ const styles = StyleSheet.create({
     color: '#999',
     marginTop: 15,
   },
-  // Styles pour le modal de filtre
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  modalScrollView: {
+    flex: 1,
+    width: '100%',
+  },
   modalContainer: {
-    width: width * 0.85,
+    width: width * 0.9,
     backgroundColor: '#FFF',
     borderRadius: 12,
     overflow: 'hidden',
+    marginVertical: 50,
+    alignSelf: 'center',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -603,20 +762,40 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: '500',
   },
-  inputWrapper: {
+  dateRangeContainer: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  dateInputWrapper: {
+    flex: 1,
+  },
+  dateLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 5,
+  },
+  dateInput: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 8,
+    padding: 10,
+    fontSize: 14,
     backgroundColor: '#FFF',
   },
-  filterInput: {
-    padding: 12,
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    gap: 10,
+  },
+  dropdownItemText: {
     fontSize: 14,
     color: '#333',
   },
   montantRangeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
   montantInputWrapper: {
     flex: 1,
@@ -630,14 +809,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
   },
+  montantSeparator: {
+    fontSize: 16,
+    color: '#999',
+  },
   filterActions: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 10,
+    marginTop: 20,
   },
   resetButton: {
     flex: 1,
-    padding: 12,
+    padding: 15,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E0E0E0',
@@ -650,7 +833,7 @@ const styles = StyleSheet.create({
   },
   applyButton: {
     flex: 1,
-    padding: 12,
+    padding: 15,
     borderRadius: 8,
     backgroundColor: '#F8A5C2',
     alignItems: 'center',
