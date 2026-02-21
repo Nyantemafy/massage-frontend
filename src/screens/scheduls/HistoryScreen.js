@@ -9,9 +9,9 @@ import {
   Alert,
 } from 'react-native';
 import { User, Bell, Filter, Clock, ChevronLeft, ChevronRight } from 'lucide-react-native';
-import Header from '../components/Header';
-import api from '../config/api';
-import CustomDrawer from '../components/CustomDrawer';
+import Header from '../../components/Header';
+import api from '../../config/api';
+import CustomDrawer from '../../components/CustomDrawer';
 
 const HistoryScreen = ({ navigation }) => {
   const [appointments, setAppointments] = useState([]);

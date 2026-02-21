@@ -9,10 +9,10 @@ import {
   TextInput,
 } from 'react-native';
 import { Search, Palette, Bell, Calendar, RefreshCcw, Check, Info } from 'lucide-react-native';
-import Header from '../components/Header';
-import Input from '../components/Input';
-import SearchableDropdown from '../components/SearchableDropdown';
-import api from '../config/api';
+import Header from '../../components/Header';
+import Input from '../../components/Input';
+import SearchableDropdown from '../../components/SearchableDropdown';
+import api from '../../config/api';
 
 // Import conditionnel pour les date pickers
 let DateTimePickerModal;

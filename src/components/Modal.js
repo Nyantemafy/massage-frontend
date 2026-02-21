@@ -39,7 +39,7 @@ const CustomModal = ({
     closeOnTouchOutside = true,
 }) => {
     const getIconConfig = () => {
-        if (icon) return { name: icon, color: iconColor || '#333' };
+        if (icon) return { component: icon, color: iconColor || '#333' };
         
         switch (type) {
         case 'success':

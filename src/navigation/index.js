@@ -4,13 +4,20 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 
 // Screens
-import LoginScreen from '../screens/LoginScreen';
-import ScheduleScreen from '../screens/ScheduleScreen';
-import NewAppointmentScreen from '../screens/NewAppointmentScreen';
-import AppointmentDetailScreen from '../screens/AppointmentDetailScreen';
-import HistoryScreen from '../screens/HistoryScreen';
-import FilterScreen from '../screens/FilterScreen';
-import MenuScreen from '../screens/MenuScreen';
+import LoginScreen from '../screens/scheduls/LoginScreen';
+import ScheduleScreen from '../screens/scheduls/ScheduleScreen';
+import NewAppointmentScreen from '../screens/scheduls/NewAppointmentScreen';
+import AppointmentDetailScreen from '../screens/scheduls/AppointmentDetailScreen';
+import HistoryScreen from '../screens/scheduls/HistoryScreen';
+import FilterScreen from '../screens/scheduls/FilterScreen';
+
+// Paiement Screens
+import EntrerChargeScreen from '../screens/paiement/EntrerChargeScreen';
+import EncaissementScreen from '../screens/paiement/EncaissementScreen';
+import HistoriquePaiementScreen from '../screens/paiement/HistoriquePaiementScreen';
+import DetailChargeScreen from '../screens/paiement/DetailChargeScreen';
+import ChargesListScreen from '../screens/paiement/ChargesListScreen';
+import ChargeDetailScreen from '../screens/paiement/ChargeDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,7 +44,14 @@ const Navigation = () => {
             <Stack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} />
             <Stack.Screen name="History" component={HistoryScreen} />
             <Stack.Screen name="Filter" component={FilterScreen} />
-            <Stack.Screen name="Menu" component={MenuScreen} />
+            
+            {/* Paiement Screens */}
+            <Stack.Screen name="EntrerCharge" component={EntrerChargeScreen} />
+            <Stack.Screen name="Encaissement" component={EncaissementScreen} />
+            <Stack.Screen name="HistoriquePaiement" component={HistoriquePaiementScreen} />
+            <Stack.Screen name="DetailCharge" component={DetailChargeScreen} />
+            <Stack.Screen name="ChargesList" component={ChargesListScreen} />
+            <Stack.Screen name="ChargeDetail" component={ChargeDetailScreen} />
           </>
         )}
       </Stack.Navigator>

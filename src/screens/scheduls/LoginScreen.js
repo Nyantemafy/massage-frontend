@@ -9,9 +9,9 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useAuth } from '../context/AuthContext';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import { useAuth } from '../../context/AuthContext';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
 import { LogIn, UserPlus, Globe } from 'lucide-react-native';
 
 const LoginScreen = ({ navigation }) => {

@@ -17,7 +17,12 @@ import {
     CalendarX, 
     Users, 
     User, 
-    LogOut 
+    LogOut,
+    Clock,
+    ChevronDown,
+    DollarSign,
+    Receipt,
+    TrendingUp
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { Image } from 'react-native';
@@ -28,6 +33,8 @@ const DRAWER_WIDTH = width * 0.8;
 const CustomDrawer = ({ visible, onClose, navigation }) => {
     const { user, logout } = useAuth();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [scheduleExpanded, setScheduleExpanded] = useState(false);
+    const [paymentExpanded, setPaymentExpanded] = useState(false);
     const slideAnim = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
 
     React.useEffect(() => {
@@ -55,7 +62,34 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
         { title: 'Profil', icon: User, screen: 'Profile' },
     ];
 
+    const scheduleOptions = [
+        { title: 'Calendrier', icon: CalendarLucide, screen: 'Schedule' },
+        { title: 'Historique', icon: Clock, screen: 'History' },
+    ];
+
+    const paymentOptions = [
+        { title: 'Entrer charge', icon: DollarSign, screen: 'EntrerCharge' },
+        { title: 'Encaissement', icon: TrendingUp, screen: 'Encaissement' },
+        { title: 'Historique paiement', icon: Receipt, screen: 'HistoriquePaiement' },
+        { title: 'Charges payées', icon: CreditCard, screen: 'ChargesList' },
+    ];
+
     const handleNavigation = (screen) => {
+        onClose();
+        navigation.navigate(screen);
+    };
+
+    const handleScheduleHeaderPress = () => {
+        setScheduleExpanded(!scheduleExpanded);
+    };
+
+    const handlePaymentHeaderPress = () => {
+        setPaymentExpanded(!paymentExpanded);
+    };
+
+    const handleOptionPress = (screen) => {
+        setScheduleExpanded(false);
+        setPaymentExpanded(false);
         onClose();
         navigation.navigate(screen);
     };
@@ -78,21 +112,17 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                 animationType="none"
                 onRequestClose={onClose}
             >
-                {/* Supprimer TouchableWithoutFeedback ici pour permettre le défilement */}
                 <View style={styles.modalOverlay}>
-                    {/* TouchableWithoutFeedback seulement pour l'overlay */}
                     <TouchableWithoutFeedback onPress={onClose}>
                         <View style={StyleSheet.absoluteFillObject} />
                     </TouchableWithoutFeedback>
                     
-                    {/* Drawer animé - PAS de TouchableWithoutFeedback autour */}
                     <Animated.View 
                         style={[
                             styles.drawerContainer,
                             { transform: [{ translateX: slideAnim }] }
                         ]}
                     >
-                        {/* Header avec bouton fermeture */}
                         <View style={styles.drawerHeader}>
                             <TouchableOpacity 
                                 onPress={onClose}
@@ -106,7 +136,6 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                             </TouchableOpacity>
                         </View>
 
-                        {/* ScrollView pour le contenu défilable */}
                         <ScrollView 
                             showsVerticalScrollIndicator={false}
                             style={styles.scrollView}
@@ -114,7 +143,6 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                             bounces={true}
                             scrollEnabled={true}
                         >
-                            {/* Profile Section */}
                             <View style={styles.profileSection}>
                                 <View style={styles.profileImageContainer}>
                                     <View style={styles.profileImage}>
@@ -131,19 +159,92 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
 
                             {/* Menu Items */}
                             <View style={styles.menuList}>
-                                {menuItems.map((item, index) => (
-                                    <TouchableOpacity
-                                        key={index}
-                                        style={styles.menuItem}
-                                        onPress={() => handleNavigation(item.screen)}
-                                    >
-                                        <item.icon size={24} color="#666" />
-                                        <Text style={styles.menuItemText}>{item.title}</Text>
-                                    </TouchableOpacity>
-                                ))}
+                                {menuItems.map((item, index) => {
+                                    if (item.title === 'Emploi du temps') {
+                                        return (
+                                            <View key={index}>
+                                                <TouchableOpacity
+                                                    style={styles.menuItem}
+                                                    onPress={handleScheduleHeaderPress}
+                                                >
+                                                    <CalendarLucide size={24} color="#666" />
+                                                    <Text style={styles.menuItemText}>{item.title}</Text>
+                                                    <ChevronDown 
+                                                        size={20} 
+                                                        color="#666" 
+                                                        style={[
+                                                            styles.chevron,
+                                                            scheduleExpanded && styles.chevronRotated
+                                                        ]} 
+                                                    />
+                                                </TouchableOpacity>
+                                                
+                                                {scheduleExpanded && (
+                                                    <View style={styles.subMenu}>
+                                                        {scheduleOptions.map((option, optionIndex) => (
+                                                            <TouchableOpacity
+                                                                key={optionIndex}
+                                                                style={styles.subMenuItem}
+                                                                onPress={() => handleOptionPress(option.screen)}
+                                                            >
+                                                                <option.icon size={20} color="#999" />
+                                                                <Text style={styles.subMenuItemText}>{option.title}</Text>
+                                                            </TouchableOpacity>
+                                                        ))}
+                                                    </View>
+                                                )}
+                                            </View>
+                                        );
+                                    } else if (item.title === 'Paiement') {
+                                        return (
+                                            <View key={index}>
+                                                <TouchableOpacity
+                                                    style={styles.menuItem}
+                                                    onPress={handlePaymentHeaderPress}
+                                                >
+                                                    <CreditCard size={24} color="#666" />
+                                                    <Text style={styles.menuItemText}>{item.title}</Text>
+                                                    <ChevronDown 
+                                                        size={20} 
+                                                        color="#666" 
+                                                        style={[
+                                                            styles.chevron,
+                                                            paymentExpanded && styles.chevronRotated
+                                                        ]} 
+                                                    />
+                                                </TouchableOpacity>
+                                                
+                                                {paymentExpanded && (
+                                                    <View style={styles.subMenu}>
+                                                        {paymentOptions.map((option, optionIndex) => (
+                                                            <TouchableOpacity
+                                                                key={optionIndex}
+                                                                style={styles.subMenuItem}
+                                                                onPress={() => handleOptionPress(option.screen)}
+                                                            >
+                                                                <option.icon size={20} color="#999" />
+                                                                <Text style={styles.subMenuItemText}>{option.title}</Text>
+                                                            </TouchableOpacity>
+                                                        ))}
+                                                    </View>
+                                                )}
+                                            </View>
+                                        );
+                                    } else {
+                                        return (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={styles.menuItem}
+                                                onPress={() => handleNavigation(item.screen)}
+                                            >
+                                                <item.icon size={24} color="#666" />
+                                                <Text style={styles.menuItemText}>{item.title}</Text>
+                                            </TouchableOpacity>
+                                        );
+                                    }
+                                })}
                             </View>
 
-                            {/* Logout Button */}
                             <View style={styles.logoutContainer}>
                                 <TouchableOpacity 
                                     style={styles.logoutButton}
@@ -154,14 +255,12 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Version de l'application */}
                             <Text style={styles.versionText}>Version 1.0.0</Text>
                         </ScrollView>
                     </Animated.View>
                 </View>
             </Modal>
 
-            {/* Modal de confirmation de déconnexion (inchangée) */}
             <Modal
                 visible={showLogoutModal}
                 transparent
@@ -288,6 +387,59 @@ const styles = StyleSheet.create({
     menuList: {
         paddingVertical: 10,
     },
+    scheduleSection: {
+        marginBottom: 5,
+        backgroundColor: '#FFF',
+        borderRadius: 8,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#F0F0F0',
+        marginHorizontal: 20,
+        marginVertical: 5,
+    },
+    scheduleHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 15,
+        backgroundColor: '#FFF',
+    },
+    scheduleHeaderLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    scheduleHeaderText: {
+        fontSize: 16,
+        color: '#F8A5C2',
+        fontWeight: '600',
+        marginLeft: 12,
+    },
+    chevron: {
+        transform: [{ rotate: '0deg' }],
+        marginLeft: 'auto',
+    },
+    chevronRotated: {
+        transform: [{ rotate: '180deg' }],
+    },
+    subMenu: {
+        backgroundColor: '#F9F9F9',
+        borderTopWidth: 1,
+        borderTopColor: '#F0F0F0',
+    },
+    subMenuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        paddingLeft: 35,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    subMenuItemText: {
+        fontSize: 15,
+        color: '#666',
+        marginLeft: 12,
+        fontWeight: '500',
+    },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -295,6 +447,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#F0F0F0',
+        marginHorizontal: 20,
     },
     menuItemText: {
         fontSize: 16,
@@ -325,7 +478,6 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 30,
     },
-    // Styles pour la modal de confirmation
     confirmModalContainer: {
         width: width * 0.85,
         maxWidth: 400,

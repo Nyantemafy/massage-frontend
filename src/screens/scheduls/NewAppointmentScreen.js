@@ -10,14 +10,14 @@ import {
   TextInput,
 } from 'react-native';
 import { Calendar, ChevronDown, Clock, Bell } from 'lucide-react-native';
-import Header from '../components/Header';
-import Input from '../components/Input';
-import Button from '../components/Button';
-import SearchableDropdown from '../components/SearchableDropdown';
-import InputModal from '../components/InputModal';
-import api from '../config/api';
-import CustomModal from '../components/Modal';
-import ModalForm from '../components/ModalForm';
+import Header from '../../components/Header';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
+import SearchableDropdown from '../../components/SearchableDropdown';
+import InputModal from '../../components/InputModal';
+import api from '../../config/api';
+import CustomModal from '../../components/Modal';
+import ModalForm from '../../components/ModalForm';
 
 let DateTimePickerModal;
 if (Platform.OS !== 'web') {

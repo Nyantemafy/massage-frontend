@@ -12,17 +12,15 @@ import { Calendar } from 'react-native-calendars';
 import { 
   Calendar as CalendarLucide, 
   Plus, 
-  Grid, 
   Clock, 
   User, 
   Bell,
-  CalendarDays,
-  LayoutGrid
+  CalendarDays
 } from 'lucide-react-native';
-import Header from '../components/Header';
-import CustomDrawer from '../components/CustomDrawer';
-import AppointmentCard from '../components/AppointmentCard';
-import api from '../config/api';
+import Header from '../../components/Header';
+import CustomDrawer from '../../components/CustomDrawer';
+import AppointmentCard from '../../components/AppointmentCard';
+import api from '../../config/api';
 
 const ScheduleScreen = ({ navigation }) => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -30,6 +28,7 @@ const ScheduleScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [markedDates, setMarkedDates] = useState({});
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     loadAppointments();
@@ -49,9 +48,9 @@ const ScheduleScreen = ({ navigation }) => {
     }
   };
 
-  const loadMonthAppointments = async () => {
+  const loadMonthAppointments = async (date = selectedDate) => {
     try {
-      const [year, month] = selectedDate.split('-');
+      const [year, month] = date.split('-');
       const response = await api.get(`/appointments/month?year=${year}&month=${month}`);
       
       const marked = {};
@@ -83,6 +82,13 @@ const ScheduleScreen = ({ navigation }) => {
     return 'faible';
   };
 
+  const handleMonthChange = (month) => {
+    const newDate = `${month.year}-${String(month.month).padStart(2, '0')}-01`;
+    setCurrentMonth(newDate);
+    // Recharger les rendez-vous du mois si nécessaire
+    loadMonthAppointments(newDate);
+  };
+  
   const handleExtraRightPress = () => {
     Alert.alert('Info', 'Icône spéciale pressée !');
     // navigation.navigate('Notifications');
@@ -117,7 +123,8 @@ const ScheduleScreen = ({ navigation }) => {
         </View>
 
         <Calendar
-          current={selectedDate}
+          current={currentMonth}
+          onMonthChange={handleMonthChange}
           markedDates={markedDates}
           onDayPress={(day) => setSelectedDate(day.dateString)}
           theme={{
@@ -176,33 +183,6 @@ const ScheduleScreen = ({ navigation }) => {
         <Plus size={28} color="#FFF" />
       </TouchableOpacity>
 
-      <View style={styles.bottomNav}>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Dashboard')}
-        >
-          <LayoutGrid size={24} color="#999" /> 
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Schedule')}
-        >
-          <CalendarLucide size={24} color="#F8A5C2" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('History')}
-        >
-          <Clock size={24} color="#999" />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.navItem}
-          onPress={() => navigation.navigate('Menu')}
-        >
-          <User size={24} color="#999" />
-        </TouchableOpacity>
-      </View>
-      
         <CustomDrawer
         visible={drawerVisible}
         onClose={() => setDrawerVisible(false)}
@@ -282,19 +262,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-    paddingVertical: 10,
-    paddingBottom: 20,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 5,
   },
 });
 

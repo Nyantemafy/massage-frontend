@@ -20,8 +20,8 @@ import {
   Bell,
   Palette, Accessibility, Dumbbell
 } from 'lucide-react-native';
-import Header from '../components/Header';
-import api from '../config/api';
+import Header from '../../components/Header';
+import api from '../../config/api';
 
 const AppointmentDetailScreen = ({ route, navigation }) => {
   const { id } = route.params;
