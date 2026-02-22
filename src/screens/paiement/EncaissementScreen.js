@@ -15,7 +15,8 @@ import {
   User, 
   ArrowLeft,
   CheckCircle,
-  Search
+  Search,
+  Flower2
 } from 'lucide-react-native';
 import Header from '../../components/Header';
 import CustomDrawer from '../../components/CustomDrawer';
@@ -229,6 +230,11 @@ const EncaissementScreen = ({ navigation }) => {
           />
         }
       >
+        {/* Fleur décorative */}
+        <View style={styles.flowerContainer}>
+          <Flower2 size={40} color="#F8A5C2" />
+        </View>
+
         <View style={styles.formContainer}>
           {/* Sélection du rendez-vous avec SearchableDropdown */}
           <View style={styles.inputGroup}>
@@ -417,6 +423,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginLeft: 5,
+  },
+  flowerContainer: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 5,
+    opacity: 0.8
   },
   dropdownItemAmount: {
     fontSize: 14,
