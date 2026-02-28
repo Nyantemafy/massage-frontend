@@ -59,6 +59,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
         { title: 'Paiement', icon: CreditCard, screen: 'Payment' },
         { title: 'Congé', icon: CalendarX, screen: 'Leave' },
         { title: 'Clients', icon: Users, screen: 'Clients' },
+        { title: 'Utilisateurs', icon: User, screen: 'Users' },
         { title: 'Profil', icon: User, screen: 'Profile' },
     ];
 

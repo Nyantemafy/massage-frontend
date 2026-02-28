@@ -19,6 +19,21 @@ import DetailChargeScreen from '../screens/paiement/DetailChargeScreen';
 import ChargesListScreen from '../screens/paiement/ChargesListScreen';
 import ChargeDetailScreen from '../screens/paiement/ChargeDetailScreen';
 
+// Clients Screens
+import ClientsScreen from '../screens/clients/ClientsScreen';
+import ClientDetailScreen from '../screens/clients/ClientDetailScreen';
+import AddClientScreen from '../screens/clients/AddClientScreen';
+import EditClientScreen from '../screens/clients/EditClientScreen';
+
+// Users Screens
+import UsersScreen from '../screens/users/UsersScreen';
+import UserDetailScreen from '../screens/users/UserDetailScreen';
+
+// Profile Screen
+import ProfileScreen from '../screens/profile/ProfileScreen';
+import AddUserScreen from '../screens/users/AddUserScreen';
+import EditUserScreen from '../screens/users/EditUserScreen';
+
 const Stack = createNativeStackNavigator();
 
 const Navigation = () => {
@@ -52,6 +67,21 @@ const Navigation = () => {
             <Stack.Screen name="DetailCharge" component={DetailChargeScreen} />
             <Stack.Screen name="ChargesList" component={ChargesListScreen} />
             <Stack.Screen name="ChargeDetail" component={ChargeDetailScreen} />
+            
+            {/* Clients Screens */}
+            <Stack.Screen name="Clients" component={ClientsScreen} />
+            <Stack.Screen name="ClientDetail" component={ClientDetailScreen} />
+            <Stack.Screen name="AddClient" component={AddClientScreen} />
+            <Stack.Screen name="EditClient" component={EditClientScreen} />
+            
+            {/* Users Screens */}
+            <Stack.Screen name="Users" component={UsersScreen} />
+            <Stack.Screen name="UserDetail" component={UserDetailScreen} />
+            <Stack.Screen name="AddUser" component={AddUserScreen} />
+            <Stack.Screen name="EditUser" component={EditUserScreen} />
+            
+            {/* Profile Screen */}
+            <Stack.Screen name="Profile" component={ProfileScreen} />
           </>
         )}
       </Stack.Navigator>
