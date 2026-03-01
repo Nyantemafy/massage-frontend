@@ -17,19 +17,16 @@ import {
   Save,
   Edit2,
   X,
+  Bell,
   Mail,
   Phone,
-  Calendar,
-  Briefcase,
-  MapPin,
   User,
-  Shield,
-  Settings,
   LogOut,
   ChevronRight,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import CustomDrawer from '../../components/CustomDrawer';
 import Header from '../../components/Header';
 
 const ProfileScreen = ({ navigation }) => {
@@ -37,6 +34,7 @@ const ProfileScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -49,10 +47,15 @@ const ProfileScreen = ({ navigation }) => {
     loadUserProfile();
   }, []);
 
+  const handleExtraRightPress = () => {
+      Alert.alert('Info', 'Icône spéciale pressée !');
+      // navigation.navigate('Notifications');
+  };
+
   const loadUserProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/auth/profile', {
+      const response = await fetch('http://localhost:3000/api/users/profile', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -106,54 +109,108 @@ const ProfileScreen = ({ navigation }) => {
   const handleSaveProfile = async () => {
     if (saving) return;
     
-    if (!formData.first_name || !formData.last_name || !formData.email) {
+    // Validation des champs obligatoires
+    if (!formData.first_name.trim() || !formData.last_name.trim() || !formData.email.trim()) {
       Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      Alert.alert('Erreur', 'Veuillez entrer une adresse email valide');
       return;
     }
 
     setSaving(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      let data = new FormData();
       
-      data.append('first_name', formData.first_name);
-      data.append('last_name', formData.last_name);
-      data.append('email', formData.email);
-      data.append('phone', formData.phone || '');
+      // Créer FormData pour l'upload de photo
+      const data = new FormData();
       
-      // TOUJOURS uploader la photo si elle existe
+      // Ajouter les informations de base
+      data.append('first_name', formData.first_name.trim());
+      data.append('last_name', formData.last_name.trim());
+      data.append('email', formData.email.trim());
+      data.append('phone', formData.phone ? formData.phone.trim() : '');
+      
+      // Gérer l'upload de la photo
       if (formData.avatar_url) {
+        console.log('📸 Gestion de la photo pour le profil...');
+        
         if (typeof formData.avatar_url === 'string') {
-          // Si c'est une URL existante, la convertir en blob pour l'upload
-          console.log('📸 Photo existante, conversion pour upload');
-          const response = await fetch(formData.avatar_url);
-          const blob = await response.blob();
-          data.append('avatar_url', blob, 'avatar.jpg');
+          // Photo existante - la convertir en blob pour l'upload
+          console.log('� Conversion photo existante pour upload...');
+          try {
+            const response = await fetch(formData.avatar_url);
+            const blob = await response.blob();
+            data.append('avatar_url', blob, 'avatar.jpg');
+            console.log('✅ Photo existante convertie avec succès');
+          } catch (error) {
+            console.error('❌ Erreur conversion photo existante:', error);
+            Alert.alert('Erreur', 'Impossible de traiter la photo existante');
+            return;
+          }
         } else {
           // Nouvelle photo sélectionnée
-          console.log('📤 Nouvelle photo à uploader:', formData.avatar_url);
-          const response = await fetch(formData.avatar_url.uri);
-          const blob = await response.blob();
-          data.append('avatar_url', blob, 'avatar.jpg');
+          console.log('📤 Upload nouvelle photo...');
+          try {
+            const response = await fetch(formData.avatar_url.uri);
+            const blob = await response.blob();
+            data.append('avatar_url', blob, 'avatar.jpg');
+            console.log('✅ Nouvelle photo prête pour upload');
+          } catch (error) {
+            console.error('❌ Erreur préparation nouvelle photo:', error);
+            Alert.alert('Erreur', 'Impossible de préparer la nouvelle photo');
+            return;
+          }
         }
+      } else {
+        console.log('📷 Aucune photo à uploader');
       }
 
+      console.log('🚀 Envoi des données au serveur...');
+      
+      // Envoyer la requête PUT au backend
       const response = await fetch('http://localhost:3000/api/users/profile', {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          // Ne pas mettre Content-Type, FormData le fait automatiquement
+        },
         body: data
       });
 
+      console.log('📥 Réponse du serveur:', response.status);
+
       if (response.ok) {
-        Alert.alert('Succès', 'Profil mis à jour');
+        const updatedUser = await response.json();
+        console.log('✅ Profil mis à jour avec succès:', updatedUser);
+        
+        // Mettre à jour l'état local
+        setUser(updatedUser);
         setEditing(false);
-        loadUserProfile();
+        
+        Alert.alert(
+          'Succès', 
+          'Votre profil a été mis à jour avec succès !',
+          [{ text: 'OK' }]
+        );
       } else {
-        throw new Error('Erreur lors de la mise à jour');
+        const errorData = await response.json();
+        console.error('❌ Erreur serveur:', errorData);
+        
+        // Gérer les erreurs spécifiques
+        if (response.status === 400 && errorData.message?.includes('email')) {
+          Alert.alert('Erreur', 'Cet email est déjà utilisé par un autre utilisateur');
+        } else {
+          Alert.alert('Erreur', errorData.message || 'Impossible de mettre à jour le profil');
+        }
       }
     } catch (error) {
-      console.error('Erreur:', error);
-      Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
+      console.error('❌ Erreur lors de la mise à jour du profil:', error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors de la mise à jour du profil');
     } finally {
       setSaving(false);
     }
@@ -203,18 +260,12 @@ const ProfileScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Header 
         title="Mon Profil" 
-        showBack={true}
-        onBackPress={() => navigation.goBack()}
-        rightComponent={
-          !editing && (
-            <TouchableOpacity 
-              style={styles.editButton}
-              onPress={() => setEditing(true)}
-            >
-              <Edit2 size={20} color="#007AFF" />
-            </TouchableOpacity>
-          )
-        }
+        showMenu={true}
+        onMenuPress={() => setDrawerVisible(true)}
+        rightIcon={<Bell size={24} color="#333" />}
+        onRightPress={() => {}}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -222,7 +273,11 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.profileHeader}>
           <View style={styles.photoSection}>
             {editing ? (
-              <View style={styles.photoEditContainer}>
+              <TouchableOpacity
+                style={styles.photoEditContainer}
+                onPress={handleImagePicker}
+                disabled={saving}
+              >
                 {formData.avatar_url ? (
                   <View style={styles.photoPreviewContainer}>
                     <Image 
@@ -235,24 +290,23 @@ const ProfileScreen = ({ navigation }) => {
                     />
                     <TouchableOpacity
                       style={styles.deletePhotoButton}
-                      onPress={handleDeletePhoto}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleDeletePhoto();
+                      }}
                     >
                       <X size={16} color="#FFF" />
                     </TouchableOpacity>
                   </View>
                 ) : (
-                  <TouchableOpacity
-                    style={styles.photoUploadButton}
-                    onPress={handleImagePicker}
-                    disabled={saving}
-                  >
+                  <View style={styles.photoUploadButton}>
                     <Camera size={24} color="#666" />
                     <Text style={styles.photoUploadText}>
                       Ajouter une photo
                     </Text>
-                  </TouchableOpacity>
+                  </View>
                 )}
-              </View>
+              </TouchableOpacity>
             ) : (
               <View style={styles.photoDisplayContainer}>
                 {user.avatar_url ? (
@@ -316,6 +370,7 @@ const ProfileScreen = ({ navigation }) => {
                 placeholder="Email"
                 keyboardType="email-address"
                 editable={!saving}
+                autoCapitalize="none"
               />
             ) : (
               <Text style={styles.infoText}>{user.email}</Text>
@@ -339,62 +394,72 @@ const ProfileScreen = ({ navigation }) => {
           </View>
         </View>
 
+        {/* Bouton d'enregistrement visible uniquement en mode édition */}
+        {editing && (
+          <View style={styles.saveSection}>
+            <TouchableOpacity 
+              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+              onPress={handleSaveProfile}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Save size={20} color="#FFF" />
+              )}
+              <Text style={styles.saveButtonText}>
+                {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Section Actions */}
-        {!editing && (
+        {!editing ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Actions</Text>
             
-            <TouchableOpacity style={styles.actionRow} onPress={() => navigation.navigate('Settings')}>
-              <Settings size={20} color="#666" />
-              <Text style={styles.actionText}>Paramètres</Text>
+            <TouchableOpacity style={styles.actionRow} onPress={() => setEditing(true)}>
+              <Edit2 size={20} color="#007AFF" />
+              <Text style={styles.actionText}>Modifier mon profil</Text>
               <ChevronRight size={20} color="#999" />
             </TouchableOpacity>
-
+            
             <TouchableOpacity style={styles.actionRow} onPress={handleLogout}>
               <LogOut size={20} color="#FF3B30" />
               <Text style={[styles.actionText, styles.logoutText]}>Déconnexion</Text>
               <ChevronRight size={20} color="#999" />
             </TouchableOpacity>
           </View>
+        ) : (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Actions</Text>
+            
+            <TouchableOpacity 
+              style={styles.actionRow} 
+              onPress={() => {
+                setEditing(false);
+                setFormData({
+                  first_name: user.first_name || '',
+                  last_name: user.last_name || '',
+                  email: user.email || '',
+                  phone: user.phone || '',
+                  avatar_url: user.avatar_url || null,
+                });
+              }}
+            >
+              <X size={20} color="#FF3B30" />
+              <Text style={[styles.actionText, styles.cancelText]}>Annuler la modification</Text>
+              <ChevronRight size={20} color="#999" />
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
-
-      {/* Boutons d'action pour l'édition */}
-      {editing && (
-        <View style={styles.editActions}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.cancelButton]}
-            onPress={() => {
-              setEditing(false);
-              setFormData({
-                first_name: user.first_name || '',
-                last_name: user.last_name || '',
-                email: user.email || '',
-                phone: user.phone || '',
-                avatar_url: user.avatar_url || null,
-              });
-            }}
-            disabled={saving}
-          >
-            <Text style={styles.cancelButtonText}>Annuler</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.saveButton]}
-            onPress={handleSaveProfile}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator size="small" color="#FFF" />
-            ) : (
-              <Save size={20} color="#FFF" />
-            )}
-            <Text style={styles.saveButtonText}>
-              {saving ? 'Enregistrement...' : 'Enregistrer'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <CustomDrawer
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+        navigation={navigation}
+      />
     </View>
   );
 };
@@ -440,7 +505,55 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   editButton: {
-    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#F0F8FF',
+    borderRadius: 8,
+    gap: 6,
+  },
+  editButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cancelEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#FFF5F5',
+    borderRadius: 8,
+    gap: 6,
+  },
+  cancelEditText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  saveSection: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#FFF',
+    marginTop: 10,
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    borderRadius: 10,
+    gap: 10,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#B0B0B0',
+  },
+  saveButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
@@ -606,6 +719,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     marginLeft: 12,
+  },
+  cancelText: {
+    color: '#FF3B30',
   },
   logoutText: {
     color: '#FF3B30',

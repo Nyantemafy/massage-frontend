@@ -23,6 +23,7 @@ import {
   Phone,
   Mail,
   X,
+  Bell,
   AlertTriangle,
   Camera,
   Upload
@@ -30,6 +31,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import Header from '../../components/Header';
 import api from '../../config/api';
+import CustomDrawer from '../../components/CustomDrawer';
 import { useAuth } from '../../context/AuthContext';
 
 const UsersScreen = ({ navigation }) => {
@@ -40,6 +42,7 @@ const UsersScreen = ({ navigation }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
   const [filters, setFilters] = useState({
     role: '',
     status: '',
@@ -111,6 +114,11 @@ const UsersScreen = ({ navigation }) => {
     }
 
     setFilteredUsers(filtered);
+  };
+
+  const handleExtraRightPress = () => {
+    Alert.alert('Info', 'Icône spéciale pressée !');
+    // navigation.navigate('Notifications');
   };
 
   const handleEditUser = (user) => {
@@ -326,26 +334,12 @@ const UsersScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Header
         title="Utilisateurs"
-        rightIcon={<Plus size={24} color="#333" />}
-        onRightPress={() => {
-          setModalType('add');
-          setSelectedUser(null);
-          setFormData({
-            first_name: '',
-            last_name: '',
-            phone: '',
-            email: '',
-            password: '',
-            role_id: '',
-            base_salary: '',
-            payment_day: '5',
-            employee_status: 'active',
-            contract_type: '',
-            hire_date: '',
-            avatar_url: null,
-          });
-          setModalVisible(true);
-        }}
+        showMenu={true}
+        onMenuPress={() => setDrawerVisible(true)}
+        rightIcon={<Bell size={24} color="#333" />}
+        onRightPress={() => {}}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
       />
 
       {/* Barre de recherche et filtres */}
@@ -359,6 +353,31 @@ const UsersScreen = ({ navigation }) => {
             onChangeText={setSearchTerm}
           />
         </View>
+
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            setModalType('add');
+            setSelectedUser(null);
+            setFormData({
+              first_name: '',
+              last_name: '',
+              phone: '',
+              email: '',
+              password: '',
+              role_id: '',
+              base_salary: '',
+              payment_day: '5',
+              employee_status: 'active',
+              contract_type: '',
+              hire_date: '',
+              avatar_url: null,
+            });
+            setModalVisible(true);
+          }}
+        >
+          <Plus size={20} color="#FFF" />
+        </TouchableOpacity>
         
         <TouchableOpacity
           style={styles.filterButton}
@@ -472,7 +491,11 @@ const UsersScreen = ({ navigation }) => {
                       <Text style={styles.label}>Photo de profil</Text>
                       <View style={styles.photoContainer}>
                         {formData.avatar_url ? (
-                          <View style={styles.photoPreviewContainer}>
+                          <TouchableOpacity
+                            style={styles.photoPreviewContainer}
+                            onPress={handleImagePicker}
+                            disabled={saving}
+                          >
                             <Image 
                               source={{ 
                                 uri: typeof formData.avatar_url === 'string' 
@@ -483,11 +506,14 @@ const UsersScreen = ({ navigation }) => {
                             />
                             <TouchableOpacity
                               style={styles.deletePhotoButton}
-                              onPress={handleDeletePhoto}
+                              onPress={(e) => {
+                                e.stopPropagation();
+                                handleDeletePhoto();
+                              }}
                             >
                               <X size={16} color="#FFF" />
                             </TouchableOpacity>
-                          </View>
+                          </TouchableOpacity>
                         ) : (
                           <TouchableOpacity
                             style={styles.photoUploadButton}
@@ -711,6 +737,11 @@ const UsersScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </Modal>
+      <CustomDrawer
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+        navigation={navigation}
+      />
     </View>
   );
 };
@@ -727,6 +758,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
     alignItems: 'center',
+    gap: 8, 
   },
   searchBar: {
     flex: 1,
@@ -735,7 +767,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
     borderRadius: 10,
     paddingHorizontal: 15,
-    marginRight: 10,
   },
   searchIcon: {
     marginRight: 10,
@@ -745,6 +776,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 10,
   },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F8A5C2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#F8A5C2',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   filterButton: {
     width: 40,
     height: 40,
@@ -752,6 +796,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   filtersContainer: {
     backgroundColor: '#FFF',
