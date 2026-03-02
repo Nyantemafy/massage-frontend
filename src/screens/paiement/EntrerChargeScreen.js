@@ -28,11 +28,13 @@ import CustomDrawer from '../../components/CustomDrawer';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import CustomModal from '../../components/Modal'; 
 import api from '../../config/api';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const { width } = Dimensions.get('window');
 
 const EntrerChargeScreen = ({ navigation }) => {
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const { pendingLeaveCount } = useLeaveCount();
   const [refreshing, setRefreshing] = useState(false);
   const [typeCharge, setTypeCharge] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -62,6 +64,10 @@ const EntrerChargeScreen = ({ navigation }) => {
       console.error('Erreur chargement employés:', error);
       return [];
     }
+  };
+
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
   };
 
   // Récupérer la liste des types de charges
@@ -250,6 +256,9 @@ const EntrerChargeScreen = ({ navigation }) => {
         onMenuPress={() => setDrawerVisible(true)}
         leftIcon={<ArrowLeft size={24} color="#333" />}
         onLeftPress={() => navigation.goBack()}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView 

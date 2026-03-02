@@ -13,6 +13,7 @@ import Header from '../../components/Header';
 import Input from '../../components/Input';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import api from '../../config/api';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 // Import conditionnel pour les date pickers
 let DateTimePickerModal;
@@ -22,6 +23,7 @@ if (Platform.OS !== 'web') {
 
 const FilterScreen = ({ navigation, route }) => {
   const { onApplyFilters, currentFilters = {} } = route.params || {};
+  const { pendingLeaveCount } = useLeaveCount();
 
   const [filters, setFilters] = useState({
     clientId: currentFilters.clientId || null,
@@ -99,23 +101,27 @@ const FilterScreen = ({ navigation, route }) => {
   // Fonctions pour récupérer les données des dropdowns
   const fetchClients = async () => {
     try {
-      const response = await api.get('/users/clients');
+      const response = await api.get('/clients');
       return response.data;
     } catch (error) {
-      console.error('Erreur chargement clients:', error);
-      return [];
+      console.error('Erreur chargement clients (premier essai):', error);
     }
   };
 
   const fetchMasseurs = async () => {
     try {
-      const response = await api.get('/users/filtre', {
-        params: { role_id: 3 }
-      });
+      const response = await api.get('/users');
       return response.data;
     } catch (error) {
-      console.error('Erreur chargement masseurs:', error);
-      return [];
+      console.error('Erreur chargement masseurs (premier essai):', error);
+      // Fallback vers /masseurs si /users ne fonctionne pas
+      try {
+        const response = await api.get('/masseurs');
+        return response.data;
+      } catch (secondError) {
+        console.error('Erreur chargement masseurs (second essai):', secondError);
+        return [];
+      }
     }
   };
 
@@ -193,6 +199,10 @@ const FilterScreen = ({ navigation, route }) => {
           filters.searchTerm;
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+  
   // Rendu pour le sélecteur de date
   const renderDatePicker = (type) => {
     const isFrom = type === 'from';
@@ -253,10 +263,12 @@ const FilterScreen = ({ navigation, route }) => {
         onBackPress={() => navigation.goBack()}
         rightIcon={
           <View style={styles.headerIcons}>
-            <Palette size={24} color="#333" />
             <Bell size={24} color="#333" />
           </View>
         }
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>

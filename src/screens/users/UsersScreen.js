@@ -5,37 +5,44 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
   TextInput,
   Alert,
-  Image,
-  ActivityIndicator,
-  RefreshControl,
   Modal,
-  Dimensions,
+  Image,
 } from 'react-native';
-import { 
+import {
   Search,
-  Filter,
   Plus,
-  User,
+  Edit2,
+  X,
+  Camera,
   Edit,
   Trash2,
-  Phone,
-  Mail,
-  X,
+  ChevronDown,
   Bell,
-  AlertTriangle,
-  Camera,
-  Upload
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
+  Shield,
+  ShieldCheck,
+  ShieldX,
+  Filter,
 } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ImagePicker from 'react-native-image-picker';
 import Header from '../../components/Header';
-import api from '../../config/api';
 import CustomDrawer from '../../components/CustomDrawer';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../config/api';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const UsersScreen = ({ navigation }) => {
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -117,8 +124,7 @@ const UsersScreen = ({ navigation }) => {
   };
 
   const handleExtraRightPress = () => {
-    Alert.alert('Info', 'Icône spéciale pressée !');
-    // navigation.navigate('Notifications');
+    navigation.navigate('LeavePending');
   };
 
   const handleEditUser = (user) => {
@@ -182,13 +188,11 @@ const UsersScreen = ({ navigation }) => {
       if (formData.avatar_url) {
         if (typeof formData.avatar_url === 'string') {
           // Si c'est une URL existante, la convertir en blob pour l'upload
-          console.log('📸 Photo existante, conversion pour upload');
           const response = await fetch(formData.avatar_url);
           const blob = await response.blob();
           data.append('avatar_url', blob, 'avatar.jpg');
         } else {
           // Nouvelle photo sélectionnée
-          console.log('📤 Nouvelle photo à uploader:', formData.avatar_url);
           const response = await fetch(formData.avatar_url.uri);
           const blob = await response.blob();
           data.append('avatar_url', blob, 'avatar.jpg');
@@ -281,8 +285,8 @@ const UsersScreen = ({ navigation }) => {
               <Image 
                 source={{ 
                   uri: user.avatar_url.startsWith('http') 
-                    ? user.avatar_url 
-                    : `http://localhost:3000${user.avatar_url}` 
+                        ? user.avatar_url 
+                        : `${api.defaults.baseURL.replace('/api', '')}${user.avatar_url}` 
                 }} 
                 style={styles.userPhoto} 
               />
@@ -340,6 +344,7 @@ const UsersScreen = ({ navigation }) => {
         onRightPress={() => {}}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount} // Utilise le contexte partagé
       />
 
       {/* Barre de recherche et filtres */}

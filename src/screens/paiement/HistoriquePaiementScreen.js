@@ -22,16 +22,15 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
-  Search,
   Users,
-  Tag,
-  DollarSign
+  Tag
 } from 'lucide-react-native';
 import Header from '../../components/Header';
 import CustomDrawer from '../../components/CustomDrawer';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 import SearchableDropdown from '../../components/SearchableDropdown';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const { width } = Dimensions.get('window');
 
@@ -47,6 +46,7 @@ const HistoriquePaiementScreen = ({ navigation }) => {
     total_amount: 0,
     payment_count: 0
   });
+  const { pendingLeaveCount } = useLeaveCount();
 
   // Données pour les dropdowns
   const [masseuses, setMasseuses] = useState([]);
@@ -87,7 +87,7 @@ const HistoriquePaiementScreen = ({ navigation }) => {
     try {
       
       // Charger les masseuses (users avec rôle masseuse)
-      const masseusesRes = await api.get('/users/masseurs', {
+      const masseusesRes = await api.get('/users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       setMasseuses(masseusesRes.data);
@@ -261,6 +261,10 @@ const HistoriquePaiementScreen = ({ navigation }) => {
     }
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   const getStatusIcon = (status) => {
     switch(status?.toLowerCase()) {
       case 'payé':
@@ -366,6 +370,9 @@ const HistoriquePaiementScreen = ({ navigation }) => {
           });
           setFilterVisible(true);
         }}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       {/* Statistiques rapides */}

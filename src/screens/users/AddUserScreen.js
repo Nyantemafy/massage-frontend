@@ -17,6 +17,7 @@ import {
   Plus,
   User
 } from 'lucide-react-native';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 import Header from '../../components/Header';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
@@ -25,7 +26,8 @@ const AddUserScreen = ({ navigation }) => {
   const { token } = useAuth();
   const [saving, setSaving] = useState(false);
   const [roles, setRoles] = useState([]);
-  
+  const { pendingLeaveCount } = useLeaveCount();
+
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -86,6 +88,10 @@ const AddUserScreen = ({ navigation }) => {
     }
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   const handleSubmit = async () => {
     if (!formData.first_name.trim() || !formData.last_name.trim() || !formData.email.trim()) {
       Alert.alert('Erreur', 'Le nom, prénom et email sont obligatoires');
@@ -117,15 +123,12 @@ const AddUserScreen = ({ navigation }) => {
       
       if (formData.avatar_url) {
         // Nouvelle photo - convertir en Blob pour l'upload
-        console.log('📤 Nouvelle photo à uploader (Add User):', formData.avatar_url);
         
         const response = await fetch(formData.avatar_url.uri);
         const blob = await response.blob();
         
         data.append('avatar_url', blob, 'avatar.jpg');
-      } else {
-        console.log('📷 Aucune photo dans AddUser');
-      }
+      } 
 
       await api.post('/users', data, {
         headers: {
@@ -153,6 +156,9 @@ const AddUserScreen = ({ navigation }) => {
         rightIcon={<Save size={24} color="#333" />}
         onRightPress={handleSubmit}
         rightDisabled={saving}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

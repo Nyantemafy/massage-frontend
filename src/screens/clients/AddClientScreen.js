@@ -20,9 +20,11 @@ import {
 import Header from '../../components/Header';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const AddClientScreen = ({ navigation }) => {
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [saving, setSaving] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -63,6 +65,10 @@ const AddClientScreen = ({ navigation }) => {
     }
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   const handleSubmit = async () => {
     if (!formData.first_name.trim() || !formData.last_name.trim()) {
       Alert.alert('Erreur', 'Le prénom et le nom sont obligatoires');
@@ -77,17 +83,13 @@ const AddClientScreen = ({ navigation }) => {
       data.append('phone', formData.phone.trim());
       data.append('email', formData.email.trim());
       
-      if (formData.photo) {
-        // Nouvelle photo - convertir en Blob pour l'upload
-        console.log('📤 Nouvelle photo à uploader (Add):', formData.photo);
-        
+      if (formData.photo) {       
         // Créer un Blob à partir de l'URI
         const response = await fetch(formData.photo.uri);
         const blob = await response.blob();
         
         data.append('photo', blob, 'photo.jpg');
       } else {
-        console.log('📷 Aucune photo dans AddClient');
       }
 
       await api.post('/clients', data, {
@@ -116,6 +118,9 @@ const AddClientScreen = ({ navigation }) => {
         rightIcon={<Save size={24} color="#333" />}
         onRightPress={handleSubmit}
         rightDisabled={saving}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

@@ -27,6 +27,7 @@ import { useAuth } from '../../context/AuthContext';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const ChargeDetailScreen = ({ route, navigation }) => {
   const { id } = route.params;
@@ -34,7 +35,8 @@ const ChargeDetailScreen = ({ route, navigation }) => {
   const [charge, setCharge] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-
+  const { pendingLeaveCount } = useLeaveCount();
+  
   useEffect(() => {
     loadCharge();
   }, []);
@@ -370,6 +372,10 @@ const ChargeDetailScreen = ({ route, navigation }) => {
     `;
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   const generatePDF = async () => {
     if (!charge) return;
 
@@ -426,6 +432,9 @@ const ChargeDetailScreen = ({ route, navigation }) => {
           title="Détail charge"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <ActivityIndicator size="large" color="#F8A5C2" style={styles.loader} />
       </View>
@@ -439,6 +448,9 @@ const ChargeDetailScreen = ({ route, navigation }) => {
           title="Détail charge"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.errorContainer}>
           <AlertCircle size={64} color="#CCC" />
@@ -454,6 +466,9 @@ const ChargeDetailScreen = ({ route, navigation }) => {
         title="Détail charge"
         showBack
         onBackPress={() => navigation.goBack()}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

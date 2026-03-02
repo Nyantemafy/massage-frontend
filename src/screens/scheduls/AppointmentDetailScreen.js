@@ -20,11 +20,13 @@ import {
   Bell,
   Palette, Accessibility, Dumbbell
 } from 'lucide-react-native';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 import Header from '../../components/Header';
 import api from '../../config/api';
 
 const AppointmentDetailScreen = ({ route, navigation }) => {
   const { id } = route.params;
+  const { pendingLeaveCount } = useLeaveCount();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('duree');
@@ -36,7 +38,6 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
   const loadAppointment = async () => {
     try {
       const response = await api.get(`/appointments/${id}`);
-      console.log(response)
       setAppointment(response.data);
     } catch (error) {
       console.error('Erreur chargement rendez-vous:', error);
@@ -93,6 +94,10 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
       day: 'numeric' 
     };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
+  };
+
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
   };
 
   // Formater l'heure
@@ -241,6 +246,14 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
           title="Détail rendez-vous"
           showBack
           onBackPress={() => navigation.goBack()}
+          rightIcon={
+            <View style={styles.headerIcons}>
+              <Bell size={24} color="#333" />
+            </View>
+          }
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <ActivityIndicator size="large" color="#F8A5C2" style={styles.loader} />
       </View>
@@ -254,6 +267,14 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
           title="Détail rendez-vous"
           showBack
           onBackPress={() => navigation.goBack()}
+          rightIcon={
+            <View style={styles.headerIcons}>
+              <Bell size={24} color="#333" />
+            </View>
+          }
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.errorContainer}>
           <AlertCircle size={64} color="#CCC" />
@@ -270,11 +291,13 @@ const AppointmentDetailScreen = ({ route, navigation }) => {
         showBack
         onBackPress={() => navigation.goBack()}
         rightIcon={
-          <View style={styles.headerIcons}>
-            <Palette size={24} color="#333" />
-            <Bell size={24} color="#333" />
-          </View>
-        }
+            <View style={styles.headerIcons}>
+              <Bell size={24} color="#333" />
+            </View>
+          }
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

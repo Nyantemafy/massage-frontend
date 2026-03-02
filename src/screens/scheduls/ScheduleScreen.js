@@ -20,9 +20,11 @@ import {
 import Header from '../../components/Header';
 import CustomDrawer from '../../components/CustomDrawer';
 import AppointmentCard from '../../components/AppointmentCard';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 import api from '../../config/api';
 
 const ScheduleScreen = ({ navigation }) => {
+  const { pendingLeaveCount } = useLeaveCount();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,9 @@ const ScheduleScreen = ({ navigation }) => {
     loadAppointments();
     loadMonthAppointments();
   }, [selectedDate]);
+
+  useEffect(() => {
+  }, [pendingLeaveCount]);
 
   const loadAppointments = async () => {
     setLoading(true);
@@ -90,8 +95,7 @@ const ScheduleScreen = ({ navigation }) => {
   };
   
   const handleExtraRightPress = () => {
-    Alert.alert('Info', 'Icône spéciale pressée !');
-    // navigation.navigate('Notifications');
+    navigation.navigate('LeavePending');
   };
 
   return (
@@ -104,6 +108,7 @@ const ScheduleScreen = ({ navigation }) => {
         onRightPress={() => {}}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount} 
       />
 
       <ScrollView style={styles.content}>

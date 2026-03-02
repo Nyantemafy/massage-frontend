@@ -19,10 +19,12 @@ import {
 import Header from '../../components/Header';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const EditUserScreen = ({ route, navigation }) => {
   const { userId } = route.params;
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [roles, setRoles] = useState([]);
@@ -117,6 +119,10 @@ const EditUserScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   const handleSubmit = async () => {
     if (!formData.first_name.trim() || !formData.last_name.trim() || !formData.email.trim()) {
       Alert.alert('Erreur', 'Le nom, prénom et email sont obligatoires');
@@ -153,20 +159,15 @@ const EditUserScreen = ({ route, navigation }) => {
       if (formData.avatar_url) {
         if (typeof formData.avatar_url === 'string') {
           // Si c'est une URL existante, ne pas l'ajouter
-          console.log('📸 Photo existante, pas d\'upload');
         } else {
           // Nouvelle photo - convertir en Blob pour l'upload
-          console.log('📤 Nouvelle photo à uploader (Edit User):', formData.avatar_url);
           
           const response = await fetch(formData.avatar_url.uri);
           const blob = await response.blob();
           
           data.append('avatar_url', blob, 'avatar.jpg');
         }
-      } else {
-        console.log('📷 Aucune photo dans EditUser');
-      }
-
+      } 
       await api.put(`/users/${userId}`, data, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -191,6 +192,9 @@ const EditUserScreen = ({ route, navigation }) => {
           title="Modifier l'utilisateur"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#F8A5C2" />
@@ -209,6 +213,9 @@ const EditUserScreen = ({ route, navigation }) => {
         rightIcon={<Save size={24} color="#333" />}
         onRightPress={handleSubmit}
         rightDisabled={saving}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

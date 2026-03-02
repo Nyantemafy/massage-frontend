@@ -20,10 +20,12 @@ import {
 import Header from '../../components/Header';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const EditClientScreen = ({ route, navigation }) => {
   const { clientId } = route.params;
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
@@ -40,6 +42,10 @@ const EditClientScreen = ({ route, navigation }) => {
       loadClient();
     }
   }, [clientId]);
+
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
 
   const loadClient = async () => {
     try {
@@ -109,10 +115,8 @@ const EditClientScreen = ({ route, navigation }) => {
       if (formData.photo) {
         if (typeof formData.photo === 'string') {
           // Si c'est une URL existante, ne pas l'ajouter
-          console.log('📸 Photo existante, pas d\'upload');
         } else {
           // Nouvelle photo - convertir en Blob pour l'upload
-          console.log('📤 Nouvelle photo à uploader:', formData.photo);
           
           // Créer un Blob à partir de l'URI
           const response = await fetch(formData.photo.uri);
@@ -120,9 +124,7 @@ const EditClientScreen = ({ route, navigation }) => {
           
           data.append('photo', blob, 'photo.jpg');
         }
-      } else {
-        console.log('📷 Aucune photo dans EditClient');
-      }
+      } 
 
       await api.put(`/clients/${clientId}`, data, {
         headers: {
@@ -148,6 +150,9 @@ const EditClientScreen = ({ route, navigation }) => {
           title="Modifier le client"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#F8A5C2" />
@@ -166,6 +171,9 @@ const EditClientScreen = ({ route, navigation }) => {
         rightIcon={<Save size={24} color="#333" />}
         onRightPress={handleSubmit}
         rightDisabled={saving}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

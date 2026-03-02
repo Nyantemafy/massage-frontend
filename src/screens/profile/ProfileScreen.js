@@ -28,9 +28,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import CustomDrawer from '../../components/CustomDrawer';
 import Header from '../../components/Header';
+import api from '../../config/api';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const ProfileScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
+  const { pendingLeaveCount } = useLeaveCount();
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -48,19 +51,17 @@ const ProfileScreen = ({ navigation }) => {
   }, []);
 
   const handleExtraRightPress = () => {
-      Alert.alert('Info', 'Icône spéciale pressée !');
-      // navigation.navigate('Notifications');
+    navigation.navigate('LeavePending');
   };
 
   const loadUserProfile = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/users/profile', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.get('/users/profile');
       
-      if (response.ok) {
-        const userData = await response.json();
+      if (response.status === 200) {
+        const userData = response.data;
+        
         setUser(userData);
         setFormData({
           first_name: userData.first_name || '',
@@ -137,16 +138,13 @@ const ProfileScreen = ({ navigation }) => {
       
       // Gérer l'upload de la photo
       if (formData.avatar_url) {
-        console.log('📸 Gestion de la photo pour le profil...');
         
         if (typeof formData.avatar_url === 'string') {
           // Photo existante - la convertir en blob pour l'upload
-          console.log('� Conversion photo existante pour upload...');
           try {
             const response = await fetch(formData.avatar_url);
             const blob = await response.blob();
             data.append('avatar_url', blob, 'avatar.jpg');
-            console.log('✅ Photo existante convertie avec succès');
           } catch (error) {
             console.error('❌ Erreur conversion photo existante:', error);
             Alert.alert('Erreur', 'Impossible de traiter la photo existante');
@@ -154,59 +152,30 @@ const ProfileScreen = ({ navigation }) => {
           }
         } else {
           // Nouvelle photo sélectionnée
-          console.log('📤 Upload nouvelle photo...');
           try {
             const response = await fetch(formData.avatar_url.uri);
             const blob = await response.blob();
             data.append('avatar_url', blob, 'avatar.jpg');
-            console.log('✅ Nouvelle photo prête pour upload');
           } catch (error) {
             console.error('❌ Erreur préparation nouvelle photo:', error);
             Alert.alert('Erreur', 'Impossible de préparer la nouvelle photo');
             return;
           }
         }
-      } else {
-        console.log('📷 Aucune photo à uploader');
-      }
+      } 
 
-      console.log('🚀 Envoi des données au serveur...');
       
       // Envoyer la requête PUT au backend
-      const response = await fetch('http://localhost:3000/api/users/profile', {
-        method: 'PUT',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          // Ne pas mettre Content-Type, FormData le fait automatiquement
-        },
-        body: data
-      });
+      const response = await api.put('/users/profile', data);
 
-      console.log('📥 Réponse du serveur:', response.status);
 
-      if (response.ok) {
-        const updatedUser = await response.json();
-        console.log('✅ Profil mis à jour avec succès:', updatedUser);
-        
-        // Mettre à jour l'état local
+      if (response.status === 200) {
+        const updatedUser = response.data;
         setUser(updatedUser);
         setEditing(false);
-        
-        Alert.alert(
-          'Succès', 
-          'Votre profil a été mis à jour avec succès !',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Succès', 'Profil mis à jour avec succès');
       } else {
-        const errorData = await response.json();
-        console.error('❌ Erreur serveur:', errorData);
-        
-        // Gérer les erreurs spécifiques
-        if (response.status === 400 && errorData.message?.includes('email')) {
-          Alert.alert('Erreur', 'Cet email est déjà utilisé par un autre utilisateur');
-        } else {
-          Alert.alert('Erreur', errorData.message || 'Impossible de mettre à jour le profil');
-        }
+        Alert.alert('Erreur', response.data?.message || 'Impossible de mettre à jour le profil');
       }
     } catch (error) {
       console.error('❌ Erreur lors de la mise à jour du profil:', error);
@@ -266,6 +235,7 @@ const ProfileScreen = ({ navigation }) => {
         onRightPress={() => {}}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -314,7 +284,7 @@ const ProfileScreen = ({ navigation }) => {
                     source={{ 
                       uri: user.avatar_url.startsWith('http') 
                         ? user.avatar_url 
-                        : `http://localhost:3000${user.avatar_url}` 
+                        : `${api.defaults.baseURL.replace('/api', '')}${user.avatar_url}` 
                     }} 
                     style={styles.userPhoto} 
                   />
@@ -350,7 +320,7 @@ const ProfileScreen = ({ navigation }) => {
                 <Text style={styles.userName}>
                   {user.first_name} {user.last_name}
                 </Text>
-                <Text style={styles.userRole}>{user.role}</Text>
+                <Text style={styles.userRole}>{user.role_name || user.role || 'Utilisateur'}</Text>
               </>
             )}
           </View>

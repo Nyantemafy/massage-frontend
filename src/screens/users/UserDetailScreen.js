@@ -29,10 +29,12 @@ import {
 import Header from '../../components/Header';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const UserDetailScreen = ({ route, navigation }) => {
   const { userId } = route.params;
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
@@ -42,6 +44,10 @@ const UserDetailScreen = ({ route, navigation }) => {
       loadUser();
     }
   }, [userId]);
+
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
 
   const loadUser = async () => {
     try {
@@ -66,6 +72,9 @@ const UserDetailScreen = ({ route, navigation }) => {
           onLeftPress={() => navigation.openDrawer()}
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#F8A5C2" />
@@ -85,6 +94,9 @@ const UserDetailScreen = ({ route, navigation }) => {
         onLeftPress={() => navigation.openDrawer()}
         rightIcon={<Edit size={24} color="#333" />}
         onRightPress={() => navigation.navigate('EditUser', { userId: userId })}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

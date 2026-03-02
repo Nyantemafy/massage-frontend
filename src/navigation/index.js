@@ -31,6 +31,11 @@ import UserDetailScreen from '../screens/users/UserDetailScreen';
 
 // Profile Screen
 import ProfileScreen from '../screens/profile/ProfileScreen';
+
+// Leave Screens
+import LeaveScreen from '../screens/leave/LeaveScreen';
+import LeaveRequestScreen from '../screens/leave/LeaveRequestScreen';
+import LeavePendingScreen from '../screens/leave/LeavePendingScreen';
 import AddUserScreen from '../screens/users/AddUserScreen';
 import EditUserScreen from '../screens/users/EditUserScreen';
 
@@ -82,6 +87,11 @@ const Navigation = () => {
             
             {/* Profile Screen */}
             <Stack.Screen name="Profile" component={ProfileScreen} />
+            
+            {/* Leave Screens */}
+            <Stack.Screen name="Leave" component={LeaveScreen} />
+            <Stack.Screen name="LeaveRequest" component={LeaveRequestScreen} />
+            <Stack.Screen name="LeavePending" component={LeavePendingScreen} />
           </>
         )}
       </Stack.Navigator>

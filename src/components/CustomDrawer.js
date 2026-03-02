@@ -14,12 +14,15 @@ import {
     Grid, 
     Calendar as CalendarLucide, 
     CreditCard, 
-    CalendarX, 
     Users, 
     User, 
     LogOut,
     Clock,
+    Plus,
+    AlertTriangle,
     ChevronDown,
+    ChevronRight,
+    CalendarX,
     DollarSign,
     Receipt,
     TrendingUp
@@ -35,6 +38,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [scheduleExpanded, setScheduleExpanded] = useState(false);
     const [paymentExpanded, setPaymentExpanded] = useState(false);
+    const [leaveExpanded, setLeaveExpanded] = useState(false);
     const slideAnim = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
 
     React.useEffect(() => {
@@ -57,10 +61,15 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
         { title: 'Tableau de bord', icon: Grid, screen: 'Dashboard' },
         { title: 'Emploi du temps', icon: CalendarLucide, screen: 'Schedule' },
         { title: 'Paiement', icon: CreditCard, screen: 'Payment' },
-        { title: 'Congé', icon: CalendarX, screen: 'Leave' },
         { title: 'Clients', icon: Users, screen: 'Clients' },
         { title: 'Utilisateurs', icon: User, screen: 'Users' },
         { title: 'Profil', icon: User, screen: 'Profile' },
+    ];
+
+    const leaveOptions = [
+        { title: 'Historique des congés', icon: Clock, screen: 'Leave' },
+        { title: 'Demande de congé', icon: Plus, screen: 'LeaveRequest' },
+        { title: 'Congés en attente', icon: AlertTriangle, screen: 'LeavePending' },
     ];
 
     const scheduleOptions = [
@@ -88,9 +97,14 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
         setPaymentExpanded(!paymentExpanded);
     };
 
+    const handleLeaveHeaderPress = () => {
+        setLeaveExpanded(!leaveExpanded);
+    };
+
     const handleOptionPress = (screen) => {
         setScheduleExpanded(false);
         setPaymentExpanded(false);
+        setLeaveExpanded(false);
         onClose();
         navigation.navigate(screen);
     };
@@ -244,6 +258,40 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                                         );
                                     }
                                 })}
+                            </View>
+
+                            {/* Congé Dropdown */}
+                            <View key="conge">
+                                <TouchableOpacity
+                                    style={styles.menuItem}
+                                    onPress={handleLeaveHeaderPress}
+                                >
+                                    <CalendarX size={24} color="#666" />
+                                    <Text style={styles.menuItemText}>Congé</Text>
+                                    <ChevronDown 
+                                        size={20} 
+                                        color="#666" 
+                                        style={[
+                                            styles.chevron,
+                                            leaveExpanded && styles.chevronRotated
+                                        ]} 
+                                    />
+                                </TouchableOpacity>
+                                
+                                {leaveExpanded && (
+                                    <View style={styles.subMenu}>
+                                        {leaveOptions.map((option, optionIndex) => (
+                                            <TouchableOpacity
+                                                key={optionIndex}
+                                                style={styles.subMenuItem}
+                                                onPress={() => handleOptionPress(option.screen)}
+                                            >
+                                                <option.icon size={20} color="#999" />
+                                                <Text style={styles.subMenuItemText}>{option.title}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                )}
                             </View>
 
                             <View style={styles.logoutContainer}>
@@ -455,6 +503,13 @@ const styles = StyleSheet.create({
         color: '#333',
         fontWeight: '500',
         marginLeft: 15,
+    },
+    menuItemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        flex: 1,
     },
     logoutContainer: {
         marginTop: 20,

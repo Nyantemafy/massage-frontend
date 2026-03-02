@@ -24,10 +24,12 @@ import {
 import Header from '../../components/Header';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const ClientDetailScreen = ({ route, navigation }) => {
   const { clientId } = route.params;
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
@@ -37,6 +39,10 @@ const ClientDetailScreen = ({ route, navigation }) => {
       loadClient();
     }
   }, [clientId]);
+
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
 
   const loadClient = async () => {
     try {
@@ -59,6 +65,9 @@ const ClientDetailScreen = ({ route, navigation }) => {
           title="Détails du client"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Chargement...</Text>
@@ -74,6 +83,9 @@ const ClientDetailScreen = ({ route, navigation }) => {
           title="Détails du client"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Client non trouvé</Text>
@@ -90,6 +102,9 @@ const ClientDetailScreen = ({ route, navigation }) => {
         onBackPress={() => navigation.goBack()}
         rightIcon={<Edit size={24} color="#333" />}
         onRightPress={() => navigation.navigate('EditClient', { clientId: clientId })}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

@@ -31,9 +31,11 @@ import CustomDrawer from '../../components/CustomDrawer';
 import CustomModal from '../../components/Modal';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const ClientsScreen = ({ navigation }) => {
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -69,6 +71,10 @@ const ClientsScreen = ({ navigation }) => {
     );
     setFilteredClients(filtered);
   }, [clients, searchTerm]);
+
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
 
   const loadClients = async () => {
     setLoading(true);
@@ -163,10 +169,8 @@ const ClientsScreen = ({ navigation }) => {
       if (formData.photo) {
         if (typeof formData.photo === 'string') {
           // Si c'est une URL existante, ne pas l'ajouter au FormData
-          console.log('📸 Photo existante, pas d\'upload');
         } else {
           // Nouvelle photo - convertir en Blob pour l'upload
-          console.log('📤 Nouvelle photo à uploader:', formData.photo);
           
           // Créer un Blob à partir de l'URI
           const response = await fetch(formData.photo.uri);
@@ -175,7 +179,6 @@ const ClientsScreen = ({ navigation }) => {
           data.append('photo', blob, 'photo.jpg');
         }
       } else {
-        console.log('📷 Aucune photo sélectionnée');
       }
 
       if (modalType === 'add') {
@@ -282,6 +285,9 @@ const ClientsScreen = ({ navigation }) => {
         onMenuPress={() => setDrawerVisible(true)}
         rightIcon={<Plus size={24} color="#333" />}
         onRightPress={handleAddClient}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       {/* Barre de recherche */}

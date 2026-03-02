@@ -31,11 +31,13 @@ import Header from '../../components/Header';
 import CustomDrawer from '../../components/CustomDrawer';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const { width } = Dimensions.get('window');
 
 const ChargesListScreen = ({ navigation }) => {
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -167,6 +169,10 @@ const ChargesListScreen = ({ navigation }) => {
     return date.toLocaleDateString('fr-FR');
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   const formatAmount = (amount) => {
     return new Intl.NumberFormat('fr-FR').format(amount) + ' AR';
   };
@@ -255,6 +261,9 @@ const ChargesListScreen = ({ navigation }) => {
           });
           setFilterVisible(true);
         }}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       {/* Barre de recherche */}
