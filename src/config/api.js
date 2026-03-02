@@ -1,7 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'https://backend-gules-seven-74.vercel.app/api';
+// Configuration locale pour le développement
+const API_URL = 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_URL,

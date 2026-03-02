@@ -9,6 +9,7 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 import { Calendar, ChevronDown, Clock, Bell } from 'lucide-react-native';
 import Header from '../../components/Header';
 import Input from '../../components/Input';
@@ -25,6 +26,7 @@ if (Platform.OS !== 'web') {
 }
 
 const NewAppointmentScreen = ({ navigation }) => {
+  const { pendingLeaveCount } = useLeaveCount();
   const [formData, setFormData] = useState({
     client_id: null,
     masseur_id: null,
@@ -85,10 +87,17 @@ const NewAppointmentScreen = ({ navigation }) => {
 
   const loadMasseurs = async () => {
     try {
-      const response = await api.get('/users/masseurs');
+      const response = await api.get('/users');
       setMasseurs(response.data);
     } catch (error) {
       console.error('Erreur chargement masseurs:', error);
+      // Si l'endpoint /users ne fonctionne pas, essayer avec /masseurs
+      try {
+        const response = await api.get('/masseurs');
+        setMasseurs(response.data);
+      } catch (secondError) {
+        console.error('Erreur chargement masseurs (second essai):', secondError);
+      }
     }
   };
 
@@ -168,8 +177,12 @@ const NewAppointmentScreen = ({ navigation }) => {
 
   // Fonctions pour récupérer les données
   const fetchClients = async () => {
-    const response = await api.get('/users/clients');
-    return response.data;
+    try {
+      const response = await api.get('/clients');
+      return response.data;
+    } catch (error) {
+      console.error('Erreur chargement clients (premier essai):', error);
+    }
   };
 
   const fetchMassageTypes = async () => {
@@ -183,10 +196,20 @@ const NewAppointmentScreen = ({ navigation }) => {
   };
 
   const fetchMasseurs = async () => {
-    const response = await api.get('/users/filtre', {
-      params: { role_id: 3 }
-    });
-    return response.data;
+    try {
+      const response = await api.get('/users');
+      return response.data;
+    } catch (error) {
+      console.error('Erreur chargement masseurs (premier essai):', error);
+      // Fallback vers /masseurs si /users ne fonctionne pas
+      try {
+        const response = await api.get('/masseurs');
+        return response.data;
+      } catch (secondError) {
+        console.error('Erreur chargement masseurs (second essai):', secondError);
+        return [];
+      }
+    }
   };
 
   // Fonctions pour créer de nouveaux éléments avec modals
@@ -259,6 +282,10 @@ const NewAppointmentScreen = ({ navigation }) => {
       });
     }
   };
+  
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
 
   const handleSubmit = async () => {
     // Validation des champs obligatoires avec la modal
@@ -317,8 +344,6 @@ const NewAppointmentScreen = ({ navigation }) => {
             remarque: formData.remarque || null,
             send_notification: formData.send_notification || false
           };
-
-          console.log('Données envoyées:', appointmentData);
 
           const response = await api.post('/appointments', appointmentData);
           
@@ -507,6 +532,9 @@ const NewAppointmentScreen = ({ navigation }) => {
         showBack
         onBackPress={() => navigation.goBack()}
         rightIcon={<Bell size={24} color="#333" />}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

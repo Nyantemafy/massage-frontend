@@ -13,6 +13,7 @@ const Header = ({
   onRightPress,
   extraRightIcon,
   onExtraRightPress,
+  badgeCount,
   style 
 }) => {
   return (
@@ -60,6 +61,14 @@ const Header = ({
                 style={styles.rightIcon}
                 resizeMode="contain"
               />
+              {/* Badge de compteur */}
+              {badgeCount && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </Text>
+                </View>
+              )}
             </View>
           </TouchableOpacity>
         )}
@@ -129,6 +138,37 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#F44336',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#FFF',
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  badgeText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    lineHeight: 12,
   },
   menuIcon: {
     width: 24,

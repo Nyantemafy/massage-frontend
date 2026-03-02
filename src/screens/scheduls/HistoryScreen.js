@@ -12,12 +12,14 @@ import { User, Bell, Filter, Clock, ChevronLeft, ChevronRight } from 'lucide-rea
 import Header from '../../components/Header';
 import api from '../../config/api';
 import CustomDrawer from '../../components/CustomDrawer';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const HistoryScreen = ({ navigation }) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const { pendingLeaveCount } = useLeaveCount();
   
   // États pour la pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,8 +37,7 @@ const HistoryScreen = ({ navigation }) => {
   }, []);
 
   const handleExtraRightPress = () => {
-    Alert.alert('Info', 'Icône spéciale pressée !');
-    // navigation.navigate('Notifications');
+    navigation.navigate('LeavePending');
   };
 
   const loadHistory = async (page = 1, append = false, filters = {}) => {
@@ -59,8 +60,6 @@ const HistoryScreen = ({ navigation }) => {
       if (filters.startDate) url += `&startDate=${filters.startDate}`;
       if (filters.endDate) url += `&endDate=${filters.endDate}`;
       if (filters.searchTerm) url += `&searchTerm=${filters.searchTerm}`;
-
-      console.log('URL avec filtres:', url); // Pour déboguer
 
       const response = await api.get(url);
       
@@ -245,6 +244,7 @@ const HistoryScreen = ({ navigation }) => {
         onRightPress={() => {}}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <View style={styles.filterContainer}>

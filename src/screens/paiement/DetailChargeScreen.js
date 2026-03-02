@@ -25,9 +25,11 @@ import Header from '../../components/Header';
 import CustomDrawer from '../../components/CustomDrawer';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const DetailChargeScreen = ({ navigation, route }) => {
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [charge, setCharge] = useState(null);
@@ -46,20 +48,17 @@ const DetailChargeScreen = ({ navigation, route }) => {
       
       // Si c'est un paiement de la table payments
       if (type === 'paiement') {
-        console.log('Chargement paiement ID:', id);
         response = await api.get(`/paiement/${id}`, {  // ← URL corrigée
           headers: { 'Authorization': `Bearer ${token}` }
         });
       } 
       // Si c'est une charge de la table expenses
       else {
-        console.log('Chargement expense ID:', id);
         response = await api.get(`/expense/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
       }
       
-      console.log('Données reçues:', response.data);
       setCharge(response.data);
     } catch (error) {
       console.error('Erreur chargement charge:', error);
@@ -131,6 +130,10 @@ const DetailChargeScreen = ({ navigation, route }) => {
     return new Date(dateString).toLocaleDateString('fr-FR', options);
   };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   const formatAmount = (amount) => {
     if (!amount) return '0 AR';
     return new Intl.NumberFormat('fr-FR').format(amount) + ' AR';
@@ -143,6 +146,9 @@ const DetailChargeScreen = ({ navigation, route }) => {
           title="Détail charge"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <ActivityIndicator size="large" color="#F8A5C2" style={styles.loader} />
       </View>
@@ -156,6 +162,9 @@ const DetailChargeScreen = ({ navigation, route }) => {
           title="Détail charge"
           showBack
           onBackPress={() => navigation.goBack()}
+          extraRightIcon={true} 
+          onExtraRightPress={handleExtraRightPress}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.errorContainer}>
           <AlertCircle size={64} color="#CCC" />
@@ -171,6 +180,9 @@ const DetailChargeScreen = ({ navigation, route }) => {
         title="Détail charge"
         showBack
         onBackPress={() => navigation.goBack()}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

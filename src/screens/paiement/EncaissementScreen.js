@@ -24,9 +24,11 @@ import SearchableDropdown from '../../components/SearchableDropdown';
 import CustomModal from '../../components/Modal';
 import api from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
+import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const EncaissementScreen = ({ navigation }) => {
   const { token } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [montant, setMontant] = useState('');
@@ -78,6 +80,10 @@ const EncaissementScreen = ({ navigation }) => {
     }
     };
 
+  const handleExtraRightPress = () => {
+    navigation.navigate('LeavePending');
+  };
+
   // Charger les rendez-vous non payés
   const loadAppointments = async () => {
     setLoading(true);
@@ -123,7 +129,6 @@ const EncaissementScreen = ({ navigation }) => {
             'Authorization': `Bearer ${token}`
         }
         });
-        console.log(response.data)
         // Filtrer les rendez-vous sans paiement et formater pour l'affichage
         return response.data
         .filter(apt => !apt.payment_id)
@@ -217,6 +222,9 @@ const EncaissementScreen = ({ navigation }) => {
         onMenuPress={() => setDrawerVisible(true)}
         leftIcon={<ArrowLeft size={24} color="#333" />}
         onLeftPress={() => navigation.goBack()}
+        extraRightIcon={true} 
+        onExtraRightPress={handleExtraRightPress}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView 
