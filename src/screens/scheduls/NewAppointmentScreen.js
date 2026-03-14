@@ -531,7 +531,6 @@ const NewAppointmentScreen = ({ navigation }) => {
         title="Ajouter rendez-vous"
         showBack
         onBackPress={() => navigation.goBack()}
-        rightIcon={<Bell size={24} color="#333" />}
         extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
         badgeCount={pendingLeaveCount}

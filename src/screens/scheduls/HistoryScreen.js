@@ -8,7 +8,13 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { User, Bell, Filter, Clock, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { 
+  User, 
+  Filter, 
+  Clock, 
+  ChevronLeft, 
+  ChevronRight 
+} from 'lucide-react-native';
 import Header from '../../components/Header';
 import api from '../../config/api';
 import CustomDrawer from '../../components/CustomDrawer';
@@ -240,9 +246,6 @@ const HistoryScreen = ({ navigation }) => {
         title="Historique des rendez-vous"
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Bell size={24} color="#333" />}
-        onRightPress={() => {}}
-        extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
         badgeCount={pendingLeaveCount}
       />

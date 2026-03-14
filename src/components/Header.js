@@ -1,7 +1,19 @@
 // components/Header.js
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  Image
+} from 'react-native';
+import { 
+  ChevronLeft,
+  Menu,
+  Bell,
+} from 'lucide-react-native';
+import { NotificationHeader } from './NotificationHeader';
 
 const Header = ({ 
   title, 
@@ -49,6 +61,9 @@ const Header = ({
       <Text style={styles.title}>{title}</Text>
       
       <View style={styles.rightContainer}>
+        {/* Notification Header */}
+        <NotificationHeader />
+        
         {/* Premier icône à droite (optionnel) */}
         {extraRightIcon && (
           <TouchableOpacity 

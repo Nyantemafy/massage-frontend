@@ -340,11 +340,7 @@ const UsersScreen = ({ navigation }) => {
         title="Utilisateurs"
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Bell size={24} color="#333" />}
-        onRightPress={() => {}}
-        extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
-        badgeCount={pendingLeaveCount} // Utilise le contexte partagé
       />
 
       {/* Barre de recherche et filtres */}

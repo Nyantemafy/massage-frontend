@@ -14,7 +14,6 @@ import {
   Plus, 
   Clock, 
   User, 
-  Bell,
   CalendarDays
 } from 'lucide-react-native';
 import Header from '../../components/Header';
@@ -104,9 +103,6 @@ const ScheduleScreen = ({ navigation }) => {
         title="Emploi du temps"
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Bell size={24} color="#333" />}
-        onRightPress={() => {}}
-        extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
         badgeCount={pendingLeaveCount} 
       />

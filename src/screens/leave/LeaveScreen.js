@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
-  Bell,
   FileText,
   User,
   Filter,
@@ -347,12 +346,8 @@ const LeaveScreen = ({ navigation }) => {
         title="Gestion des Congés" 
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Bell size={24} color="#333" />}
-        onRightPress={() => {}}
-        extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
-        badgeCount={pendingLeaveCount}
-      />
+      /> badgeCount={pendingLeaveCount}
 
       <ScrollView 
         style={styles.content}

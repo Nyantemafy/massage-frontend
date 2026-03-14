@@ -17,7 +17,6 @@ import {
   Save,
   Edit2,
   X,
-  Bell,
   Mail,
   Phone,
   User,
@@ -231,9 +230,6 @@ const ProfileScreen = ({ navigation }) => {
         title="Mon Profil" 
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<Bell size={24} color="#333" />}
-        onRightPress={() => {}}
-        extraRightIcon={true} 
         onExtraRightPress={handleExtraRightPress}
         badgeCount={pendingLeaveCount}
       />
