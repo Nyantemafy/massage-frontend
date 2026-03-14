@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -41,7 +41,10 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
     const [leaveExpanded, setLeaveExpanded] = useState(false);
     const slideAnim = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
 
-    React.useEffect(() => {
+    // Filter menu items based on user role
+    const isAdminOrManager = user?.role_name === 'admin' || user?.role_name === 'manager';
+
+    useEffect(() => {
         if (visible) {
             Animated.timing(slideAnim, {
                 toValue: 0,
@@ -58,18 +61,18 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
     }, [visible]);
 
     const menuItems = [
-        { title: 'Tableau de bord', icon: Grid, screen: 'Dashboard' },
+        ...(isAdminOrManager ? [{ title: 'Tableau de bord', icon: Grid, screen: 'Dashboard' }] : []),
         { title: 'Emploi du temps', icon: CalendarLucide, screen: 'Schedule' },
         { title: 'Paiement', icon: CreditCard, screen: 'Payment' },
         { title: 'Clients', icon: Users, screen: 'Clients' },
-        { title: 'Utilisateurs', icon: User, screen: 'Users' },
+        ...(isAdminOrManager ? [{ title: 'Utilisateurs', icon: User, screen: 'Users' }] : []),
         { title: 'Profil', icon: User, screen: 'Profile' },
     ];
 
     const leaveOptions = [
         { title: 'Historique des congés', icon: Clock, screen: 'Leave' },
-        { title: 'Demande de congé', icon: Plus, screen: 'LeaveRequest' },
-        { title: 'Congés en attente', icon: AlertTriangle, screen: 'LeavePending' },
+        ...(isAdminOrManager ? [{ title: 'Demande de congé', icon: Plus, screen: 'LeaveRequest' }] : []),
+        ...(isAdminOrManager ? [{ title: 'Congés en attente', icon: AlertTriangle, screen: 'LeavePending' }] : []),
     ];
 
     const scheduleOptions = [
@@ -78,10 +81,10 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
     ];
 
     const paymentOptions = [
-        { title: 'Entrer charge', icon: DollarSign, screen: 'EntrerCharge' },
-        { title: 'Encaissement', icon: TrendingUp, screen: 'Encaissement' },
+        ...(isAdminOrManager ? [{ title: 'Entrer charge', icon: DollarSign, screen: 'EntrerCharge' }] : []),
+        ...(isAdminOrManager ? [{ title: 'Encaissement', icon: TrendingUp, screen: 'Encaissement' }] : []),
         { title: 'Historique paiement', icon: Receipt, screen: 'HistoriquePaiement' },
-        { title: 'Charges payées', icon: CreditCard, screen: 'ChargesList' },
+        ...(isAdminOrManager ? [{ title: 'Charges payées', icon: CreditCard, screen: 'ChargesList' }] : []),
     ];
 
     const handleNavigation = (screen) => {
@@ -260,39 +263,54 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
                                 })}
                             </View>
 
-                            {/* Congé Dropdown */}
-                            <View key="conge">
-                                <TouchableOpacity
-                                    style={styles.menuItem}
-                                    onPress={handleLeaveHeaderPress}
-                                >
-                                    <CalendarX size={24} color="#666" />
-                                    <Text style={styles.menuItemText}>Congé</Text>
-                                    <ChevronDown 
-                                        size={20} 
-                                        color="#666" 
-                                        style={[
-                                            styles.chevron,
-                                            leaveExpanded && styles.chevronRotated
-                                        ]} 
-                                    />
-                                </TouchableOpacity>
-                                
-                                {leaveExpanded && (
-                                    <View style={styles.subMenu}>
-                                        {leaveOptions.map((option, optionIndex) => (
-                                            <TouchableOpacity
-                                                key={optionIndex}
-                                                style={styles.subMenuItem}
-                                                onPress={() => handleOptionPress(option.screen)}
-                                            >
-                                                <option.icon size={20} color="#999" />
-                                                <Text style={styles.subMenuItemText}>{option.title}</Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </View>
-                                )}
-                            </View>
+                            {/* Leave History for regular users */}
+                            {!isAdminOrManager && (
+                                <View key="leave-history">
+                                    <TouchableOpacity
+                                        style={styles.menuItem}
+                                        onPress={() => handleOptionPress('Leave')}
+                                    >
+                                        <Clock size={24} color="#666" />
+                                        <Text style={styles.menuItemText}>Historique des congés</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {/* Congé Dropdown - Only show for admin/manager */}
+                            {isAdminOrManager && (
+                                <View key="conge">
+                                    <TouchableOpacity
+                                        style={styles.menuItem}
+                                        onPress={handleLeaveHeaderPress}
+                                    >
+                                        <CalendarX size={24} color="#666" />
+                                        <Text style={styles.menuItemText}>Congé</Text>
+                                        <ChevronDown 
+                                            size={20} 
+                                            color="#666" 
+                                            style={[
+                                                styles.chevron,
+                                                leaveExpanded && styles.chevronRotated
+                                            ]} 
+                                        />
+                                    </TouchableOpacity>
+                                    
+                                    {leaveExpanded && (
+                                        <View style={styles.subMenu}>
+                                            {leaveOptions.map((option, optionIndex) => (
+                                                <TouchableOpacity
+                                                    key={optionIndex}
+                                                    style={styles.subMenuItem}
+                                                    onPress={() => handleOptionPress(option.screen)}
+                                                >
+                                                    <option.icon size={20} color="#999" />
+                                                    <Text style={styles.subMenuItemText}>{option.title}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    )}
+                                </View>
+                            )}
 
                             <View style={styles.logoutContainer}>
                                 <TouchableOpacity 
