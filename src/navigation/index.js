@@ -39,6 +39,18 @@ import LeavePendingScreen from '../screens/leave/LeavePendingScreen';
 import AddUserScreen from '../screens/users/AddUserScreen';
 import EditUserScreen from '../screens/users/EditUserScreen';
 
+// Dashboard Screen
+import DashboardScreen from '../screens/DashboardScreen';
+
+// Revenue Analytics Screen
+import RevenueAnalyticsScreen from '../screens/RevenueAnalyticsScreen';
+
+// Client Analytics Screen
+import ClientAnalyticsScreen from '../screens/ClientAnalyticsScreen';
+
+// Masseuse Analytics Screen
+import MasseuseAnalyticsScreen from '../screens/MasseuseAnalyticsScreen';
+
 const Stack = createNativeStackNavigator();
 
 const Navigation = () => {
@@ -59,6 +71,10 @@ const Navigation = () => {
           <Stack.Screen name="Login" component={LoginScreen} />
         ) : (
           <>
+            <Stack.Screen name="Dashboard" component={DashboardScreen} />
+            <Stack.Screen name="RevenueAnalytics" component={RevenueAnalyticsScreen} />
+            <Stack.Screen name="ClientAnalytics" component={ClientAnalyticsScreen} />
+            <Stack.Screen name="MasseuseAnalytics" component={MasseuseAnalyticsScreen} />
             <Stack.Screen name="Schedule" component={ScheduleScreen} />
             <Stack.Screen name="NewAppointment" component={NewAppointmentScreen} />
             <Stack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} />
