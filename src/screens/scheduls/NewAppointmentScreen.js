@@ -475,9 +475,9 @@ const NewAppointmentScreen = ({ navigation }) => {
             style={styles.timeInput}
             onPress={showEndTimePicker}
           >
-            <Clock size={64} color="#CCC" />
+            <Clock size={20} color="#999" />
             <Text style={[styles.timeInputText, formData.end_time && styles.selectedText]}>
-              {formData.end_time || 'Heure fin'}
+              {formData.end_time || 'Heure fin *'}
             </Text>
           </TouchableOpacity>
         </View>
