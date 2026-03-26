@@ -12,19 +12,30 @@ import {
 import { Svg, Line, Circle } from 'react-native-svg';
 import { 
   Calendar as CalendarLucide, 
-  TrendingUp,
   Star,
   X
 } from 'lucide-react-native';
 import Header from '../components/Header';
 import CustomDrawer from '../components/CustomDrawer';
+import { useLeaveCount } from '../context/LeaveCountContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../config/api';
 
 const { width } = Dimensions.get('window');
 
 const DashboardScreen = ({ navigation }) => {
+  const { user } = useAuth();
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const { pendingLeaveCount, refreshLeaveCount } = useLeaveCount();
   const [loading, setLoading] = useState(false);
+
+  // Vérifier les permissions - rediriger si non autorisé
+  useEffect(() => {
+    if (user && user.role_id !== 1 && user.role_id !== 2) {
+      // Rediriger vers Schedule si non admin/manager
+      navigation.replace('Schedule');
+    }
+  }, [user, navigation]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showStartPicker, setShowStartPicker] = useState(false);
@@ -746,11 +757,10 @@ const DashboardScreen = ({ navigation }) => {
           title="Tableau de bord"
           showMenu={true}
           onMenuPress={() => setDrawerVisible(true)}
-          rightIcon={<TrendingUp size={24} color="#333" />}
           onRightPress={() => {}}
           extraRightIcon={true}
           onExtraRightPress={handleExtraRightPress}
-          badgeCount={1}
+          badgeCount={pendingLeaveCount}
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#F8A5C2" />
@@ -765,11 +775,10 @@ const DashboardScreen = ({ navigation }) => {
         title="Tableau de bord"
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
-        rightIcon={<TrendingUp size={24} color="#333" />}
         onRightPress={() => {}}
         extraRightIcon={true}
         onExtraRightPress={handleExtraRightPress}
-        badgeCount={1}
+        badgeCount={pendingLeaveCount}
       />
 
       <ScrollView style={styles.content}>

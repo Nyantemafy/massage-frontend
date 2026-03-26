@@ -137,7 +137,6 @@ const ScheduleScreen = ({ navigation }) => {
     
     try {
       const response = await api.get(`/appointments?date=${day.dateString}`);
-      console.log('API Response for date:', day.dateString, response.data); // Debug
       setDayAppointments(response.data);
       setAppointmentsModalVisible(true);
     } catch (error) {
@@ -156,7 +155,6 @@ const ScheduleScreen = ({ navigation }) => {
   };
 
   const renderAppointmentsModal = () => {
-    console.log('dayAppointments in modal:', dayAppointments);
     
     const dayDate = new Date(selectedDate);
     const dayLabel = dayDate.toLocaleDateString('fr-FR', { 
@@ -176,9 +174,7 @@ const ScheduleScreen = ({ navigation }) => {
       cancelled: dayAppointments.filter(apt => apt.status === 'cancelled'),
       pending: dayAppointments.filter(apt => apt.status === 'pending'),
     };
-    
-    console.log('Grouped appointments:', groupedAppointments);
-    
+        
     const renderAppointmentItem = (item) => {
       // Utiliser les bonnes propriétés
       const startTime = item.start_time || item.startTime || '--:--';

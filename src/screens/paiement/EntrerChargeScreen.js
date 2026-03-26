@@ -182,7 +182,12 @@ const EntrerChargeScreen = ({ navigation }) => {
 
       expenseData.payment_date = new Date().toISOString();
 
-      await api.post('/expense', expenseData);
+      // Enregistrer une dépense salaire via le nouvel endpoint dédié
+      if (typeCharge === 'salaire') {
+        await api.post('/expenses/salary', expenseData);
+      } else {
+        await api.post('/expense', expenseData);
+      }
       
       // Afficher la modal de succès
       setSuccessModalVisible(true);

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import api from '../config/api';
+import { useAuth } from './AuthContext';
 
 const LeaveCountContext = createContext();
 
@@ -13,6 +14,7 @@ export const useLeaveCount = () => {
 };
 
 export const LeaveCountProvider = ({ children }) => {
+  const { user } = useAuth();
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
   const [loading, setLoading] = useState(false);
   
@@ -21,7 +23,15 @@ export const LeaveCountProvider = ({ children }) => {
   const CACHE_DURATION = 60000; 
 
   const loadPendingLeaveCount = useCallback(async (force = false) => {
+    const roleName = user?.role_name || user?.role;
+    const isManager = roleName === 'admin' || roleName === 'manager';
     const now = Date.now();
+
+    if (!isManager) {
+      setPendingLeaveCount(0);
+      lastFetchTime.current = now;
+      return 0;
+    }
     
     if (!force && pendingLeaveCount > 0 && (now - lastFetchTime.current) < CACHE_DURATION) {
       return pendingLeaveCount;
@@ -78,11 +88,15 @@ export const LeaveCountProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [loading, pendingLeaveCount]); 
+  }, [loading, pendingLeaveCount, user?.role, user?.role_name]); 
 
   useEffect(() => {
-    loadPendingLeaveCount(true);   
-  }, []); 
+    if (user) {
+      loadPendingLeaveCount(true);
+    } else {
+      setPendingLeaveCount(0);
+    }
+  }, [loadPendingLeaveCount, user]); 
 
   const refreshLeaveCount = useCallback(() => {
     return loadPendingLeaveCount(true); 

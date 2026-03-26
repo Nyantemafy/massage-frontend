@@ -9,12 +9,12 @@ import Navigation from './src/navigation';
 export default function App() {
   return (
     <SafeAreaProvider>
-      <LeaveCountProvider>
         <AuthProvider>
+      <LeaveCountProvider>
           <Navigation />
           <StatusBar style="auto" />
-        </AuthProvider>
       </LeaveCountProvider>
+        </AuthProvider>
     </SafeAreaProvider>
   );
 }

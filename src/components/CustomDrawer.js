@@ -62,6 +62,7 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
 
     const menuItems = [
         ...(isAdminOrManager ? [{ title: 'Tableau de bord', icon: Grid, screen: 'Dashboard' }] : []),
+        { title: 'Rendez-vous du jour', icon: CalendarLucide, screen: 'TodayAppointments' },
         { title: 'Emploi du temps', icon: CalendarLucide, screen: 'Schedule' },
         { title: 'Paiement', icon: CreditCard, screen: 'Payment' },
         { title: 'Clients', icon: Users, screen: 'Clients' },
@@ -91,6 +92,9 @@ const CustomDrawer = ({ visible, onClose, navigation }) => {
         onClose();
         navigation.navigate(screen);
     };
+
+    // RDV du jour (Today appointments) accessible par tous les rôles via un onglet séparé
+    // Personnalisation simple: ajout dans le menu principal
 
     const handleScheduleHeaderPress = () => {
         setScheduleExpanded(!scheduleExpanded);

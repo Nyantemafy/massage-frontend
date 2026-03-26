@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,37 +6,48 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
-  ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { 
+import {
   Bell,
   X,
   Check,
-  Clock,
   DollarSign,
-  FileText,
-  Users,
   AlertCircle,
+  Briefcase,
+  CalendarCheck2,
+  CalendarX2,
+  CalendarClock,
 } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import api from '../config/api';
 import { useAuth } from '../context/AuthContext';
 
 const { width, height } = Dimensions.get('window');
 
-const NotificationDropdown = ({ visible, onClose, notifications, onMarkAsRead, onMarkAllAsRead, onNotificationPress }) => {
-  const unreadCount = notifications.filter(n => !n.is_read).length;
-
+const NotificationDropdown = ({
+  visible,
+  onClose,
+  notifications,
+  unreadCount,
+  onMarkAllAsRead,
+  onNotificationPress,
+  roleLabel,
+}) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'payment':
-        return <DollarSign size={16} color="#F8A5C2" />;
-      case 'project_request':
-        return <FileText size={16} color="#2196F3" />;
-      case 'project_accepted':
-        return <Check size={16} color="#4CAF50" />;
-      case 'project_rejected':
-        return <AlertCircle size={16} color="#F44336" />;
+        return <DollarSign size={16} color="#F59E0B" />;
+      case 'salary_paid':
+        return <Briefcase size={16} color="#16A34A" />;
+      case 'leave_request':
+        return <CalendarClock size={16} color="#8B5CF6" />;
+      case 'leave_approved':
+        return <CalendarCheck2 size={16} color="#16A34A" />;
+      case 'leave_rejected':
+        return <CalendarX2 size={16} color="#EF4444" />;
+      case 'leave_pending':
+        return <CalendarClock size={16} color="#F59E0B" />;
       default:
         return <Bell size={16} color="#666" />;
     }
@@ -60,27 +71,18 @@ const NotificationDropdown = ({ visible, onClose, notifications, onMarkAsRead, o
   if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity 
-        style={styles.modalOverlay} 
-        activeOpacity={1} 
-        onPress={onClose}
-      >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={onClose}>
         <View style={styles.dropdownContainer}>
           <View style={styles.dropdownHeader}>
-            <Text style={styles.dropdownTitle}>Notifications</Text>
+            <View>
+              <Text style={styles.dropdownTitle}>Notifications</Text>
+              <Text style={styles.dropdownSubtitle}>{roleLabel}</Text>
+            </View>
             <View style={styles.headerActions}>
               {unreadCount > 0 && (
-                <TouchableOpacity 
-                  style={styles.markAllReadButton}
-                  onPress={onMarkAllAsRead}
-                >
-                  <Text style={styles.markAllReadText}>Tout marquer lu</Text>
+                <TouchableOpacity style={styles.markAllReadButton} onPress={onMarkAllAsRead}>
+                  <Text style={styles.markAllReadText}>Tout lire</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity onPress={onClose}>
@@ -88,12 +90,13 @@ const NotificationDropdown = ({ visible, onClose, notifications, onMarkAsRead, o
               </TouchableOpacity>
             </View>
           </View>
-          
+
           <ScrollView style={styles.notificationsList}>
             {notifications.length === 0 ? (
               <View style={styles.emptyState}>
-                <Bell size={48} color="#CCC" />
+                <Bell size={44} color="#CCC" />
                 <Text style={styles.emptyText}>Aucune notification</Text>
+                <Text style={styles.emptySubtext}>Les alertes utiles à votre rôle apparaîtront ici.</Text>
               </View>
             ) : (
               notifications.map((notification) => (
@@ -101,7 +104,7 @@ const NotificationDropdown = ({ visible, onClose, notifications, onMarkAsRead, o
                   key={notification.id}
                   style={[
                     styles.notificationItem,
-                    !notification.is_read && styles.unreadNotification
+                    !notification.is_read && styles.unreadNotification,
                   ]}
                   onPress={() => onNotificationPress(notification)}
                 >
@@ -110,10 +113,10 @@ const NotificationDropdown = ({ visible, onClose, notifications, onMarkAsRead, o
                   </View>
                   <View style={styles.notificationContent}>
                     <View style={styles.notificationHeader}>
-                      <Text 
+                      <Text
                         style={[
                           styles.notificationTitle,
-                          !notification.is_read && styles.unreadTitle
+                          !notification.is_read && styles.unreadTitle,
                         ]}
                       >
                         {notification.title}
@@ -122,18 +125,16 @@ const NotificationDropdown = ({ visible, onClose, notifications, onMarkAsRead, o
                         {formatTime(notification.created_at)}
                       </Text>
                     </View>
-                    <Text 
+                    <Text
                       style={[
                         styles.notificationMessage,
-                        !notification.is_read && styles.unreadMessage
+                        !notification.is_read && styles.unreadMessage,
                       ]}
                     >
                       {notification.message}
                     </Text>
                   </View>
-                  {!notification.is_read && (
-                    <View style={styles.unreadDot} />
-                  )}
+                  {!notification.is_read && <View style={styles.unreadDot} />}
                 </TouchableOpacity>
               ))
             )}
@@ -145,37 +146,53 @@ const NotificationDropdown = ({ visible, onClose, notifications, onMarkAsRead, o
 };
 
 const NotificationHeader = () => {
+  const navigation = useNavigation();
   const { user } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+  const roleName = user?.role_name || user?.role;
 
-  const loadNotifications = async () => {
+  const roleLabel = useMemo(() => {
+    if (roleName === 'admin' || roleName === 'manager') {
+      return 'Paiements employés et activités importantes';
+    }
+    if (roleName === 'masseuse') {
+      return 'Salaire, congés et suivi de vos activités';
+    }
+    return 'Notifications personnelles';
+  }, [roleName]);
+
+  const loadNotifications = useCallback(async () => {
     try {
-      const response = await api.get('/notifications?limit=5');
-      setNotifications(response.data.notifications);
-      setUnreadCount(response.data.unread_count);
+      const response = await api.get('/notifications?limit=8');
+      setNotifications(response.data.notifications || []);
+      setUnreadCount(Number(response.data.unread_count || 0));
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return undefined;
+    }
+
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [loadNotifications, user?.id]);
 
   const markAsRead = async (notificationId) => {
     try {
       await api.put(`/notifications/${notificationId}/read`);
-      setNotifications(prev => 
-        prev.map(n => 
-          n.id === notificationId ? { ...n, is_read: true } : n
-        )
+      setNotifications((prev) =>
+        prev.map((item) => (item.id === notificationId ? { ...item, is_read: true } : item))
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -184,31 +201,52 @@ const NotificationHeader = () => {
   const markAllAsRead = async () => {
     try {
       await api.put('/notifications/mark-all-read');
-      setNotifications(prev => 
-        prev.map(n => ({ ...n, is_read: true }))
-      );
+      setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
       setUnreadCount(0);
     } catch (error) {
-      console.error('Error marking all as read:', error);
+      console.error('Error marking all notifications as read:', error);
     }
   };
 
-  const handleNotificationPress = (notification) => {
+  const handleNotificationPress = async (notification) => {
     if (!notification.is_read) {
-      markAsRead(notification.id);
+      await markAsRead(notification.id);
     }
-    // Handle navigation based on notification type
-    // This would need to be implemented based on your navigation structure
+
     setShowDropdown(false);
+
+    if (notification.type === 'payment') {
+      navigation.navigate('HistoriquePaiement');
+      return;
+    }
+
+    if (notification.type === 'salary_paid') {
+      if (roleName === 'admin' || roleName === 'manager') {
+        navigation.navigate('EntrerCharge');
+      } else {
+        navigation.navigate('HistoriquePaiement');
+      }
+      return;
+    }
+
+    if (
+      notification.type === 'leave_approved' ||
+      notification.type === 'leave_rejected' ||
+      notification.type === 'leave_pending' ||
+      notification.type === 'leave_request'
+    ) {
+      if (roleName === 'admin' || roleName === 'manager') {
+        navigation.navigate('LeavePending');
+      } else {
+        navigation.navigate('Leave');
+      }
+    }
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.bellButton}
-        onPress={() => setShowDropdown(true)}
-      >
-        <Bell size={24} color="#333" />
+      <TouchableOpacity style={styles.bellButton} onPress={() => setShowDropdown(true)}>
+        <Bell size={22} color="#333" />
         {unreadCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
@@ -220,9 +258,10 @@ const NotificationHeader = () => {
         visible={showDropdown}
         onClose={() => setShowDropdown(false)}
         notifications={notifications}
-        onMarkAsRead={markAsRead}
+        unreadCount={unreadCount}
         onMarkAllAsRead={markAllAsRead}
         onNotificationPress={handleNotificationPress}
+        roleLabel={roleLabel}
       />
     </View>
   );
@@ -234,22 +273,27 @@ const styles = StyleSheet.create({
   },
   bellButton: {
     padding: 8,
+    borderRadius: 10,
+    backgroundColor: '#FFF6FA',
+    borderWidth: 1,
+    borderColor: '#F4D6E1',
   },
   badge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 2,
+    right: 2,
     backgroundColor: '#F44336',
     borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    minWidth: 18,
+    height: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 3,
   },
   badgeText: {
     color: '#FFF',
     fontSize: 10,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   modalOverlay: {
     flex: 1,
@@ -261,9 +305,9 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     backgroundColor: '#FFF',
     width: width * 0.9,
-    maxWidth: 400,
-    maxHeight: height * 0.7,
-    borderRadius: 12,
+    maxWidth: 420,
+    maxHeight: height * 0.72,
+    borderRadius: 16,
     marginRight: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -275,14 +319,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
   },
   dropdownTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#333',
+  },
+  dropdownSubtitle: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
   },
   headerActions: {
     flexDirection: 'row',
@@ -293,42 +342,48 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8A5C2',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 999,
   },
   markAllReadText: {
     color: '#FFF',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   notificationsList: {
     flex: 1,
   },
   emptyState: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+    paddingHorizontal: 24,
   },
   emptyText: {
-    color: '#999',
+    color: '#666',
     fontSize: 16,
+    fontWeight: '600',
     marginTop: 10,
+  },
+  emptySubtext: {
+    color: '#999',
+    fontSize: 13,
+    textAlign: 'center',
+    marginTop: 6,
   },
   notificationItem: {
     flexDirection: 'row',
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: '#F3F3F3',
     alignItems: 'center',
   },
   unreadNotification: {
-    backgroundColor: '#F8A5C220',
+    backgroundColor: '#FFF7FA',
   },
   notificationIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F7F7F7',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -339,8 +394,9 @@ const styles = StyleSheet.create({
   notificationHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 4,
+    gap: 8,
   },
   notificationTitle: {
     fontSize: 14,
@@ -349,7 +405,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   unreadTitle: {
-    fontWeight: '600',
+    fontWeight: '700',
   },
   notificationTime: {
     fontSize: 12,
@@ -362,7 +418,6 @@ const styles = StyleSheet.create({
   },
   unreadMessage: {
     color: '#333',
-    fontWeight: '500',
   },
   unreadDot: {
     width: 8,

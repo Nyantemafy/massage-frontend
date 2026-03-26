@@ -28,6 +28,7 @@ import Header from '../../components/Header';
 import CustomDrawer from '../../components/CustomDrawer';
 import api from '../../config/api';
 import { useLeaveCount } from '../../context/LeaveCountContext';
+import { useAuth } from '../../context/AuthContext';
 
 const LeaveScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
@@ -40,6 +41,9 @@ const LeaveScreen = ({ navigation }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const { pendingLeaveCount } = useLeaveCount();
+  const { user } = useAuth();
+  const roleName = user?.role_name || user?.role;
+  const isManager = roleName === 'admin' || roleName === 'manager';
 
   useEffect(() => {
     loadData();
@@ -346,8 +350,11 @@ const LeaveScreen = ({ navigation }) => {
         title="Gestion des Congés" 
         showMenu={true}
         onMenuPress={() => setDrawerVisible(true)}
+        extraRightIcon={true}
         onExtraRightPress={handleExtraRightPress}
-      /> badgeCount={pendingLeaveCount}
+        badgeCount={pendingLeaveCount}
+        showLeaveShortcut={isManager}
+      />
 
       <ScrollView 
         style={styles.content}

@@ -382,8 +382,7 @@ const LeavePendingScreen = ({ navigation }) => {
         onBackPress={() => navigation.goBack()}
         leftIcon={<ArrowLeft size={24} color="#333" />}
         onLeftPress={() => navigation.goBack()}
-        extraRightIcon={Bell}
-        badgeCount={pendingLeaveCount}
+        showLeaveShortcut={false}
       />
 
       <ScrollView 

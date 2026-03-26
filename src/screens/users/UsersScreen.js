@@ -31,6 +31,7 @@ import {
   ShieldCheck,
   ShieldX,
   Filter,
+  Users,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ImagePicker from 'react-native-image-picker';
@@ -41,7 +42,7 @@ import api from '../../config/api';
 import { useLeaveCount } from '../../context/LeaveCountContext';
 
 const UsersScreen = ({ navigation }) => {
-  const { token } = useAuth();
+  const { token, user: currentUser } = useAuth(); // Ajout de currentUser
   const { pendingLeaveCount } = useLeaveCount();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -57,9 +58,10 @@ const UsersScreen = ({ navigation }) => {
   
   // États pour les modals
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState('add'); // add, edit, delete
+  const [modalType, setModalType] = useState('add'); // add, edit, delete, changeRole
   const [selectedUser, setSelectedUser] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -74,6 +76,16 @@ const UsersScreen = ({ navigation }) => {
     hire_date: '',
     avatar_url: null,
   });
+
+  // Vérifier les permissions
+  const canManageUsers = () => {
+    return currentUser?.role_id === 1 || currentUser?.role_id === 2; // 1: Admin, 2: Manager
+  };
+
+  const canChangeRole = () => {
+    const hasPermission = currentUser?.role_id === 1 || currentUser?.role_id === 2; // Admin et Manager peuvent changer les rôles
+    return hasPermission;
+  };
 
   useEffect(() => {
     loadUsers();
@@ -128,6 +140,11 @@ const UsersScreen = ({ navigation }) => {
   };
 
   const handleEditUser = (user) => {
+    if (!canManageUsers()) {
+      Alert.alert('Accès refusé', 'Vous n\'avez pas les droits pour modifier un utilisateur');
+      return;
+    }
+    
     setSelectedUser(user);
     setFormData({
       first_name: user.first_name || '',
@@ -147,13 +164,36 @@ const UsersScreen = ({ navigation }) => {
     setModalVisible(true);
   };
 
+  const handleChangeRole = (user) => {
+    if (!canChangeRole()) {
+      Alert.alert('Accès refusé', 'Seuls les administrateurs et managers peuvent changer les rôles');
+      return;
+    }
+    
+    setSelectedUser(user);
+    setSelectedRole(user.role_id?.toString() || '');
+    setModalType('changeRole');
+    setModalVisible(true);
+  };
+
   const handleDeleteUser = (user) => {
+    if (!canManageUsers()) {
+      Alert.alert('Accès refusé', 'Vous n\'avez pas les droits pour supprimer un utilisateur');
+      return;
+    }
+    
     setSelectedUser(user);
     setModalType('delete');
     setModalVisible(true);
   };
 
   const handleSubmit = async () => {
+    if (!canManageUsers()) {
+      Alert.alert('Accès refusé', 'Vous n\'avez pas les droits pour effectuer cette action');
+      setModalVisible(false);
+      return;
+    }
+
     if (!formData.first_name.trim() || !formData.last_name.trim() || !formData.email.trim()) {
       Alert.alert('Erreur', 'Le nom, prénom et email sont obligatoires');
       return;
@@ -174,7 +214,7 @@ const UsersScreen = ({ navigation }) => {
       data.append('role_id', formData.role_id);
       data.append('employee_status', formData.employee_status);
       
-      if (formData.role_id === '2') { // Masseur
+      if (formData.role_id === '3') { // Masseur
         data.append('base_salary', formData.base_salary || '0');
         data.append('payment_day', formData.payment_day || '5');
         data.append('contract_type', formData.contract_type || '');
@@ -227,7 +267,44 @@ const UsersScreen = ({ navigation }) => {
     }
   };
 
+  const handleRoleChangeSubmit = async () => {
+    if (!canChangeRole()) {
+      Alert.alert('Accès refusé', 'Seuls les administrateurs et managers peuvent changer les rôles');
+      setModalVisible(false);
+      return;
+    }
+
+    if (!selectedRole) {
+      Alert.alert('Erreur', 'Veuillez sélectionner un rôle');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await api.put(`/users/${selectedUser.id}/role`, {
+        role_id: parseInt(selectedRole)
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      Alert.alert('Succès', `Le rôle de ${selectedUser.first_name} ${selectedUser.last_name} a été modifié avec succès`);
+      setModalVisible(false);
+      loadUsers();
+    } catch (error) {
+      console.error('Erreur lors du changement de rôle:', error);
+      Alert.alert('Erreur', 'Impossible de modifier le rôle de l\'utilisateur');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDeleteConfirm = async () => {
+    if (!canManageUsers()) {
+      Alert.alert('Accès refusé', 'Vous n\'avez pas les droits pour supprimer un utilisateur');
+      setModalVisible(false);
+      return;
+    }
+    
     try {
       await api.delete(`/users/${selectedUser.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -273,13 +350,37 @@ const UsersScreen = ({ navigation }) => {
     await loadUsers();
     setRefreshing(false);
   };
-            const renderUserCard = (user) => (
+
+  const getRoleName = (roleId) => {
+    switch(roleId) {
+      case 1: return 'Admin';
+      case 2: return 'Manager';    // id 2 = Manager
+      case 3: return 'Masseur';    // id 3 = Masseur
+      default: return 'Client';
+    }
+  };
+
+  const getRoleIcon = (roleId) => {
+    switch(roleId) {
+      case 1: // Admin
+        return <ShieldCheck size={16} color="#F8A5C2" />;
+      case 2: // Manager (id 2)
+        return <Shield size={16} color="#2196F3" />;
+      case 3: // Masseuse (id 3)
+        return <Users size={16} color="#4CAF50" />;
+      default:
+        return <User size={16} color="#666" />;
+    }
+  };
+
+  const renderUserCard = (user) => (
     <View style={styles.userCard} key={user.id}>
       <View style={styles.userHeader}>
         <View style={styles.userInfo}>
           <TouchableOpacity
             style={styles.userTouchable}
-            onPress={() => handleEditUser(user)}
+            onPress={() => canManageUsers() ? handleEditUser(user) : null}
+            disabled={!canManageUsers()}
           >
             {user.avatar_url ? (
               <Image 
@@ -299,6 +400,10 @@ const UsersScreen = ({ navigation }) => {
               <Text style={styles.userName}>
                 {user.first_name} {user.last_name}
               </Text>
+              <View style={styles.roleBadge}>
+                {getRoleIcon(user.role_id)}
+                <Text style={styles.roleText}>{getRoleName(user.role_id)}</Text>
+              </View>
               <View style={styles.userContact}>
                 {user.phone && (
                   <View style={styles.contactRow}>
@@ -316,20 +421,31 @@ const UsersScreen = ({ navigation }) => {
             </View>
           </TouchableOpacity>
         </View>
-        <View style={styles.userActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleEditUser(user)}
-          >
-            <Edit size={16} color="#666" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleDeleteUser(user)}
-          >
-            <Trash2 size={16} color="#666" />
-          </TouchableOpacity>
-        </View>
+                
+        {canManageUsers() && (
+          <View style={styles.userActions}>
+            {canChangeRole() && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => handleChangeRole(user)}
+              >
+                <Shield size={16} color="#666" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleEditUser(user)}
+            >
+              <Edit size={16} color="#666" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => handleDeleteUser(user)}
+            >
+              <Trash2 size={16} color="#666" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -355,30 +471,32 @@ const UsersScreen = ({ navigation }) => {
           />
         </View>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => {
-            setModalType('add');
-            setSelectedUser(null);
-            setFormData({
-              first_name: '',
-              last_name: '',
-              phone: '',
-              email: '',
-              password: '',
-              role_id: '',
-              base_salary: '',
-              payment_day: '5',
-              employee_status: 'active',
-              contract_type: '',
-              hire_date: '',
-              avatar_url: null,
-            });
-            setModalVisible(true);
-          }}
-        >
-          <Plus size={20} color="#FFF" />
-        </TouchableOpacity>
+        {canManageUsers() && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => {
+              setModalType('add');
+              setSelectedUser(null);
+              setFormData({
+                first_name: '',
+                last_name: '',
+                phone: '',
+                email: '',
+                password: '',
+                role_id: '',
+                base_salary: '',
+                payment_day: '5',
+                employee_status: 'active',
+                contract_type: '',
+                hire_date: '',
+                avatar_url: null,
+              });
+              setModalVisible(true);
+            }}
+          >
+            <Plus size={20} color="#FFF" />
+          </TouchableOpacity>
+        )}
         
         <TouchableOpacity
           style={styles.filterButton}
@@ -404,7 +522,10 @@ const UsersScreen = ({ navigation }) => {
                   onPress={() => setFilters({ ...filters, role })}
                 >
                   <Text style={styles.filterOptionText}>
-                    {role === '' ? 'Tous' : role === '1' ? 'Admin' : role === '2' ? 'Masseur' : 'Client'}
+                    {role === '' ? 'Tous' : 
+                    role === '1' ? 'Admin' : 
+                    role === '2' ? 'Manager' : 
+                    'Masseur'}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -475,6 +596,7 @@ const UsersScreen = ({ navigation }) => {
                 <Text style={styles.modalTitle}>
                   {modalType === 'add' ? 'Ajouter un utilisateur' : 
                    modalType === 'edit' ? 'Modifier un utilisateur' : 
+                   modalType === 'changeRole' ? 'Changer le rôle' :
                    'Supprimer un utilisateur'}
                 </Text>
                 <TouchableOpacity
@@ -486,7 +608,48 @@ const UsersScreen = ({ navigation }) => {
               </View>
 
               <ScrollView style={styles.modalBody}>
-                {modalType !== 'delete' && (
+                {modalType === 'changeRole' ? (
+                  <View style={styles.changeRoleContainer}>
+                    <Text style={styles.changeRoleTitle}>
+                      Changer le rôle de {selectedUser?.first_name} {selectedUser?.last_name}
+                    </Text>
+                    <Text style={styles.changeRoleSubtitle}>
+                      Rôle actuel : {getRoleName(selectedUser?.role_id)}
+                    </Text>
+                    
+                    <View style={styles.roleSelectionGroup}>
+                      <Text style={styles.label}>Nouveau rôle</Text>
+                      <View style={styles.roleOptions}>
+                        {[
+                          { id: 1, name: 'Administrateur', icon: 'ShieldCheck' },
+                          { id: 2, name: 'Manager', icon: 'Shield' },        // id 2 = Manager, icône Shield
+                          { id: 3, name: 'Masseur', icon: 'Users' }          // id 3 = Masseur, icône Users
+                        ].map(role => (
+                          <TouchableOpacity
+                            key={role.id}
+                            style={[
+                              styles.roleSelectionCard,
+                              selectedRole === role.id.toString() && styles.roleSelectionCardActive
+                            ]}
+                            onPress={() => setSelectedRole(role.id.toString())}
+                          >
+                            <View style={styles.roleSelectionIcon}>
+                              {role.id === 1 && <ShieldCheck size={24} color={selectedRole === role.id.toString() ? '#FFF' : '#F8A5C2'} />}
+                              {role.id === 2 && <Shield size={24} color={selectedRole === role.id.toString() ? '#FFF' : '#2196F3'} />}
+                              {role.id === 3 && <Users size={24} color={selectedRole === role.id.toString() ? '#FFF' : '#4CAF50'} />}
+                            </View>
+                            <Text style={[
+                              styles.roleSelectionName,
+                              selectedRole === role.id.toString() && styles.roleSelectionNameActive
+                            ]}>
+                              {role.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </View>
+                  </View>
+                ) : modalType !== 'delete' ? (
                   <>
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Photo de profil</Text>
@@ -592,7 +755,7 @@ const UsersScreen = ({ navigation }) => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.label}>Rôle *</Text>
                       <View style={styles.roleOptions}>
-                        {['', '1', '2', '3'].map(role => (
+                        {['1', '2', '3'].map(role => (
                           <TouchableOpacity
                             key={role}
                             style={[
@@ -602,19 +765,19 @@ const UsersScreen = ({ navigation }) => {
                             onPress={() => setFormData({ ...formData, role_id: role })}
                           >
                             <Text style={styles.roleOptionText}>
-                              {role === '' ? 'Tous' : role === '1' ? 'Admin' : role === '2' ? 'Masseur' : 'Client'}
+                              {role === '1' ? 'Admin' : role === '3' ? 'Masseur' : 'Manager'}
                             </Text>
                           </TouchableOpacity>
                         ))}
                       </View>
                     </View>
 
-                    {formData.role_id === '2' && (
+                    {formData.role_id === '3' && (
                       <>
                         <View style={styles.inputGroup}>
                           <Text style={styles.label}>Statut employé</Text>
                           <View style={styles.roleOptions}>
-                            {['', 'active', 'inactive'].map(status => (
+                            {['active', 'inactive'].map(status => (
                               <TouchableOpacity
                                 key={status}
                                 style={[
@@ -624,7 +787,7 @@ const UsersScreen = ({ navigation }) => {
                                 onPress={() => setFormData({ ...formData, employee_status: status })}
                               >
                                 <Text style={styles.roleOptionText}>
-                                  {status === '' ? 'Tous' : status === 'active' ? 'Actif' : 'Inactif'}
+                                  {status === 'active' ? 'Actif' : 'Inactif'}
                                 </Text>
                               </TouchableOpacity>
                             ))}
@@ -679,12 +842,10 @@ const UsersScreen = ({ navigation }) => {
                       </>
                     )}
                   </>
-                )}
-
-                {modalType === 'delete' && (
+                ) : (
                   <View style={styles.deleteContent}>
                     <View style={styles.deleteIcon}>
-                      <AlertTriangle size={48} color="#F44336" />
+                      <Trash2 size={48} color="#F44336" />
                     </View>
                     <Text style={styles.deleteMessage}>
                       Êtes-vous sûr de vouloir supprimer {selectedUser?.first_name} {selectedUser?.last_name} ?
@@ -705,7 +866,24 @@ const UsersScreen = ({ navigation }) => {
                   <Text style={styles.cancelButtonText}>Annuler</Text>
                 </TouchableOpacity>
                 
-                {modalType !== 'delete' && (
+                {modalType === 'changeRole' && (
+                  <TouchableOpacity
+                    style={[styles.button, styles.submitButton, saving && styles.submitButtonDisabled]}
+                    onPress={handleRoleChangeSubmit}
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                      <>
+                        <Shield size={16} color="#FFF" />
+                        <Text style={styles.submitButtonText}>Changer le rôle</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+                
+                {modalType !== 'delete' && modalType !== 'changeRole' && (
                   <TouchableOpacity
                     style={[styles.button, styles.submitButton, saving && styles.submitButtonDisabled]}
                     onPress={handleSubmit}
@@ -883,51 +1061,16 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
     borderStyle: 'dashed',
   },
-  // Styles pour les photos dans le modal
-  photoContainer: {
+  roleBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    gap: 5,
+    marginBottom: 5,
   },
-  photoPreviewContainer: {
-    position: 'relative',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    overflow: 'hidden',
-  },
-  photoPreview: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 60,
-  },
-  deletePhotoButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  photoUploadButton: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#F8F8F8',
-    borderWidth: 2,
-    borderColor: '#E0E0E0',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  photoUploadText: {
+  roleText: {
     fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
     fontWeight: '500',
+    color: '#666',
   },
   userDetails: {
     flex: 1,
@@ -936,7 +1079,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
+    marginBottom: 3,
   },
   userContact: {
     gap: 3,
@@ -947,17 +1090,17 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   contactText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
   },
   userActions: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F8F8F8',
@@ -1075,6 +1218,59 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: '500',
   },
+  // Styles pour le changement de rôle
+  changeRoleContainer: {
+    flex: 1,
+  },
+  changeRoleTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  changeRoleSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  roleSelectionGroup: {
+    gap: 15,
+  },
+  roleSelectionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    marginBottom: 10,
+  },
+  roleSelectionCardActive: {
+    backgroundColor: '#F8A5C2',
+    borderColor: '#F8A5C2',
+  },
+  roleSelectionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  roleSelectionName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  roleSelectionNameActive: {
+    color: '#FFF',
+  },
+  // Styles pour la suppression
   deleteContent: {
     alignItems: 'center',
     paddingVertical: 40,
@@ -1104,6 +1300,9 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
   },
   cancelButton: {
     backgroundColor: '#F0F0F0',
@@ -1133,6 +1332,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFF',
+  },
+  photoContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  photoPreviewContainer: {
+    position: 'relative',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    overflow: 'hidden',
+  },
+  photoPreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 60,
+  },
+  deletePhotoButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoUploadButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F8F8F8',
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  photoUploadText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });
 

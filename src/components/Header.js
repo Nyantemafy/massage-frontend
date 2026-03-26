@@ -1,5 +1,5 @@
 // components/Header.js
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { 
   ChevronLeft,
-  Menu,
-  Bell,
+  CalendarDays,
 } from 'lucide-react-native';
 import { NotificationHeader } from './NotificationHeader';
+import { useAuth } from '../context/AuthContext';
+import { useLeaveCount } from '../context/LeaveCountContext';
+import { useNavigation } from '@react-navigation/native';
 
 const Header = ({ 
   title, 
@@ -26,8 +28,18 @@ const Header = ({
   extraRightIcon,
   onExtraRightPress,
   badgeCount,
+  showLeaveShortcut = true,
+  showTodayShortcut = false,
+  onTodayPress,
   style 
 }) => {
+  const navigation = useNavigation();
+  const { user } = useAuth();
+  const { pendingLeaveCount } = useLeaveCount();
+  const roleName = user?.role_name || user?.role;
+  const isManager = roleName === 'admin' || roleName === 'manager';
+  const resolvedBadgeCount = typeof badgeCount === 'number' ? badgeCount : pendingLeaveCount;
+
   return (
     <View style={[styles.header, style]}>
       <View style={styles.leftContainer}>
@@ -61,26 +73,34 @@ const Header = ({
       <Text style={styles.title}>{title}</Text>
       
       <View style={styles.rightContainer}>
-        {/* Notification Header */}
         <NotificationHeader />
-        
-        {/* Premier icône à droite (optionnel) */}
-        {extraRightIcon && (
+
+        {showTodayShortcut && (
           <TouchableOpacity 
-            onPress={onExtraRightPress} 
+            onPress={onTodayPress || (() => navigation.navigate('TodayAppointments'))}
             style={styles.rightIconButton}
           >
-            <View style={styles.rightIconContainer}>
+            <View style={[styles.rightIconContainer, styles.shortcutContainer]}>
+              <CalendarDays size={20} color="#333" />
+            </View>
+          </TouchableOpacity>
+        )}
+        
+        {isManager && showLeaveShortcut && extraRightIcon && (
+          <TouchableOpacity 
+            onPress={onExtraRightPress || (() => navigation.navigate('LeavePending'))} 
+            style={styles.rightIconButton}
+          >
+            <View style={[styles.rightIconContainer, styles.shortcutContainer]}>
               <Image 
                 source={require('../../assets/icone/cong-you-bing.png')}
                 style={styles.rightIcon}
                 resizeMode="contain"
               />
-              {/* Badge de compteur */}
-              {badgeCount && (
+              {resolvedBadgeCount > 0 && (
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>
-                    {badgeCount > 99 ? '99+' : badgeCount}
+                    {resolvedBadgeCount > 99 ? '99+' : resolvedBadgeCount}
                   </Text>
                 </View>
               )}
@@ -88,7 +108,6 @@ const Header = ({
           </TouchableOpacity>
         )}
         
-        {/* Deuxième icône à droite (rightIcon original) */}
         {rightIcon && (
           <TouchableOpacity 
             onPress={onRightPress} 
@@ -127,7 +146,7 @@ const styles = StyleSheet.create({
     width: 50,
   },
   rightContainer: {
-    width: 100, // Augmenté pour accueillir deux icônes
+    minWidth: 100,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
@@ -154,6 +173,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+  },
+  shortcutContainer: {
+    backgroundColor: '#FFF6FA',
+    borderWidth: 1,
+    borderColor: '#F4D6E1',
   },
   badge: {
     position: 'absolute',

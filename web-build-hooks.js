@@ -28,7 +28,6 @@ module.exports = {
         const fontDest = path.join(fontsDir, font);
         if (fs.existsSync(fontSource)) {
           fs.copyFileSync(fontSource, fontDest);
-          console.log(`Copied ${font} to web build`);
         }
       });
     }
@@ -42,7 +41,6 @@ module.exports = {
       const imgDest = path.join(calendarDir, img);
       if (fs.existsSync(imgSource)) {
         fs.copyFileSync(imgSource, imgDest);
-        console.log(`Copied ${img} to web build`);
       }
     });
   }
